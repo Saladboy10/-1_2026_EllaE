@@ -563,7 +563,7 @@ const CODE_LIMIT = 3;
 const CODES = {
   '13190cf8': { coins: 200 },
   'ff0c36a1': { unlock: ['emote:spin', 'emote:joy', 'emote:dab'] },
-  '79a25fd8': { coins: 100, unlock: ['pet:pup'] },
+  '79a25fd8': { coins: 100, unlock: ['pet:pup'], max: 8 },
 };
 function codeHash(text) {
   let h = 0x811c9dc5;
