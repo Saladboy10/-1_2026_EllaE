@@ -21,6 +21,3 @@ A 3D endless runner. Dodge trains and barriers across three tracks, grab coins, 
 - **Emotes:** Wave, Dance and Floss are free; Spin 50, Jump for Joy 75 and Dab 100. Play them from the menu, the avatar maker, or keys 1–6. Buying anything takes two taps so nothing is bought by accident.
 - **My own:** skin, hair, clothes, hats and extras. Coins you collect are saved and can unlock the Crown (150) and the Cape (100).
 - **Pets** that run beside you (bought with coins): Milo 50, Tails 50
-
-## Star Catcher (`star-catcher.html`)
-Catch falling stars, dodge rocks, and grab hearts for extra lives.

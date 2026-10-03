@@ -85,18 +85,6 @@
           <a class="play" href="rail-rush.html">Play</a>
         </div>
       </article>
-      <article class="card">
-        <img src="assets/star-catcher.jpg" alt="A glowing paddle catching falling stars under a night sky">
-        <div class="card-body">
-          <h3>Star Catcher</h3>
-          <p>Catch the falling stars, dodge the rocks and grab hearts for extra lives.</p>
-          <div class="meta">
-            <span class="pill">Arcade</span>
-            <span class="pill best" id="best-star" hidden></span>
-          </div>
-          <a class="play" href="star-catcher.html">Play</a>
-        </div>
-      </article>
     </div>
   </section>
 
@@ -112,7 +100,7 @@
 <script>
   // Show each game's best score, saved by the game itself in this browser.
   function read(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } }
-  for (const [id, key] of [['best-rail', 'railrush.best'], ['best-star', 'starCatcherBest']]) {
+  for (const [id, key] of [['best-rail', 'railrush.best']]) {
     const best = Number(read(key)) || 0;
     if (best > 0) { const el = document.getElementById(id); el.textContent = 'Best ' + best; el.hidden = false; }
   }
