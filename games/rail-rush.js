@@ -252,6 +252,11 @@ function ball(r, color, x, y, z, parent, sx = 1, sy = 1, sz = 1) {
   const m = new THREE.Mesh(geo('SphereGeometry', r, 20, 14), mat(color));
   m.position.set(x, y, z); m.scale.set(sx, sy, sz); parent.add(m); return m;
 }
+// A rounded tube from y=top down to y=bottom inside its parent.
+function limb(rTop, rBottom, top, bottom, color, parent) {
+  const m = new THREE.Mesh(geo('CylinderGeometry', rTop, rBottom, top - bottom, 16), mat(color));
+  m.position.y = (top + bottom) / 2; parent.add(m); return m;
+}
 function tube(rTop, rBottom, h, color, x, y, z, parent) {
   const m = new THREE.Mesh(geo('CylinderGeometry', rTop, rBottom, h, 24), mat(color));
   m.position.set(x, y, z); parent.add(m); return m;
@@ -268,7 +273,7 @@ const COSTUMES = {
         box(0.3, 0.2, 0.46, K, s * 0.4, Y(1.5), 0, body);
         box(0.07, 0.7, 0.44, K, s * 0.35, Y(1.18), 0, body);
         box(0.15, 0.17, 0.1, '#8a5a32', s * 0.28, Y(0.84), -0.25, body);
-        box(0.24, 0.08, 0.26, K, 0, -0.36, 0, arms[i]);
+        box(0.22, 0.08, 0.22, K, 0, -0.56, 0, arms[i]);
         box(0.3, 0.06, 0.32, K, 0, -0.22, 0, legs[i]);
         const sword = new THREE.Group(); sword.position.set(s * 0.1, Y(1.25), 0.25); sword.rotation.z = s * 0.45; body.add(sword);
         box(0.06, 0.85, 0.06, '#2b2b30', 0, 0, 0, sword);
@@ -365,12 +370,12 @@ const COSTUMES = {
       for (const i of [-1, 0, 1]) cone(0.13, 0.65, W, i * 0.18, 0.35, 0.3, head, 2.0, -i * 0.3);
       cone(0.16, 0.35, '#ffffff', 0, Y(1.42), -0.22, body, Math.PI, 0);
       for (const arm of arms) {
-        box(0.27, 0.09, 0.29, '#e8a020', 0, -0.38, 0, arm);
-        box(0.1, 0.1, 0.02, '#3ff0f0', 0, -0.55, -0.12, arm);
+        box(0.22, 0.09, 0.22, '#e8a020', 0, -0.56, 0, arm);
+        box(0.08, 0.08, 0.02, '#3ff0f0', 0, -0.66, -0.07, arm);
       }
       for (const leg of legs) {
-        box(0.32, 0.05, 0.44, '#3fd6e0', 0, -0.69, -0.05, leg);
-        box(0.32, 0.04, 0.44, '#e8a020', 0, -0.64, -0.05, leg);
+        box(0.24, 0.04, 0.38, '#3fd6e0', 0, -0.74, -0.06, leg);
+        box(0.24, 0.03, 0.38, '#e8a020', 0, -0.7, -0.06, leg);
       }
     },
   },
@@ -420,27 +425,49 @@ function buildRunner(c) {
   body.position.y = 0.95; root.add(body);
   const Y = y => y - 0.95;
   const legs = [], arms = [];
+  // Limbs are rounded tubes with ball joints at the hips, knees, shoulders and elbows, so
+  // nothing floats apart. Elbows and knees are their own groups so they can bend.
   for (const s of [-1, 1]) {
     const hip = new THREE.Group(); hip.position.set(s * tw * 0.24, Y(0.8), 0); body.add(hip);
-    box(0.28 * t, 0.72, 0.3 * t, P.pants, 0, -0.36, 0, hip);
-    box(0.3 * t, 0.14, 0.42, P.shoes, 0, -0.74, -0.05, hip);
-    legs.push(hip);
-    const sh = new THREE.Group(); sh.position.set(s * (tw / 2 + 0.125 * t), Y(1.52), 0); body.add(sh);
-    box(0.25 * t, 0.36, 0.28 * t, P.sleeve, 0, -0.15, 0, sh);
-    box(0.2 * t, 0.4, 0.22 * t, P.hand, 0, -0.52, 0, sh);
-    arms.push(sh);
+    ball(0.15 * t, P.pants, 0, 0, 0, hip);
+    limb(0.13 * t, 0.11 * t, 0, -0.38, P.pants, hip);
+    const knee = new THREE.Group(); knee.position.y = -0.38; hip.add(knee);
+    ball(0.11 * t, P.pants, 0, 0, 0, knee);
+    limb(0.11 * t, 0.085 * t, 0, -0.33, P.pants, knee);
+    box(0.19 * t + 0.03, 0.12, 0.36, P.shoes, 0, -0.37, -0.06, knee);
+    hip.knee = knee; legs.push(hip);
+
+    const sh = new THREE.Group(); sh.position.set(s * (tw / 2 + 0.08 * t), Y(1.5), 0); body.add(sh);
+    ball(0.14 * t, P.sleeve, 0, 0, 0, sh);
+    limb(0.115 * t, 0.095 * t, 0, -0.32, P.sleeve, sh);
+    const elbow = new THREE.Group(); elbow.position.y = -0.32; sh.add(elbow);
+    ball(0.095 * t, P.hand, 0, 0, 0, elbow);
+    limb(0.09 * t, 0.07 * t, 0, -0.27, P.hand, elbow);
+    ball(0.085 * t, P.hand, 0, -0.34, 0, elbow, 0.9, 1.15, 0.75);
+    sh.elbow = elbow; arms.push(sh);
   }
-  box(tw, 0.78, t < 1 ? 0.3 : 0.42, P.shirt, 0, Y(1.18), 0, body);
-  const head = new THREE.Group(); head.position.y = Y(1.58); body.add(head);
-  box(0.54, 0.54, 0.54, P.skin, 0, 0.29, 0, head);
+  box(tw, 0.62, t < 1 ? 0.3 : 0.42, P.shirt, 0, Y(1.27), 0, body);
+  box(tw * 0.86, 0.36, t < 1 ? 0.27 : 0.38, P.pants, 0, Y(0.9), 0, body);
+  // Neck joins the head to the shoulders; the head is a little smaller than the old cartoon one.
+  tube(0.09 * t + 0.02, 0.1 * t + 0.03, 0.2, P.skin, 0, Y(1.62), 0, body);
+  const head = new THREE.Group(); head.position.y = Y(1.64); head.scale.setScalar(0.84); body.add(head);
+  box(0.54, 0.56, 0.54, P.skin, 0, 0.29, 0, head);
   if (!costume || costume.face !== false) {
-    for (const s of [-1, 1]) box(0.08, 0.11, 0.02, '#1b1530', s * 0.12, 0.33, -0.275, head);
-    box(0.16, 0.035, 0.02, '#8a2f3a', 0, 0.17, -0.275, head);
+    for (const s of [-1, 1]) {
+      box(0.08, 0.1, 0.02, '#1b1530', s * 0.12, 0.33, -0.275, head);
+      ball(0.06, P.skin, s * 0.28, 0.27, 0.02, head, 0.5, 1, 0.8);
+    }
+    box(0.07, 0.1, 0.07, P.skin, 0, 0.24, -0.29, head);
+    box(0.16, 0.035, 0.02, '#8a2f3a', 0, 0.13, -0.275, head);
   }
 
   let cape = null;
   if (costume) {
     costume.decorate({ head, body, arms, legs, Y });
+    for (const [groups, cut] of [[arms, -0.34], [legs, -0.4]]) for (const g of groups) {
+      const joint = g.elbow || g.knee;
+      for (const part of [...g.children]) if (part !== joint && part.position.y < cut) { part.position.y -= joint.position.y; joint.add(part); }
+    }
   } else {
     const hc = c.hairColor;
     if (c.hair === 'short' || c.hair === 'long' || c.hair === 'bun') {
@@ -898,6 +925,9 @@ function update(dt) {
     const air = running && player.y > 0.05, rolling = running && player.roll > 0;
     a.legs[0].rotation.x = air ? -0.7 : s * amp; a.legs[1].rotation.x = air ? 0.4 : -s * amp;
     a.arms[0].rotation.x = air ? 2.6 : -s * amp * 0.9; a.arms[1].rotation.x = air ? 2.6 : s * amp * 0.9;
+    // Knees bend as each leg swings back; elbows stay bent while running.
+    for (const l of a.legs) l.knee.rotation.x = air ? -1.0 : -Math.max(0, -l.rotation.x) * 1.3 - (state === 'custom' ? 0 : 0.1);
+    for (const arm of a.arms) arm.elbow.rotation.x = air ? 0.3 : state === 'custom' ? 0.2 : 1.2;
     if (rolling) {
       const p = 1 - player.roll / ROLL_TIME;
       a.body.rotation.x = -p * Math.PI * 2; a.body.scale.set(0.8, 0.6, 0.8); a.body.position.y = 0.55;
@@ -921,8 +951,8 @@ function update(dt) {
       if (emoteT >= e.dur) emote = null;
       else {
         a.body.rotation.set(0, 0, 0); a.body.position.y = 0.95; a.root.rotation.y = 0;
-        for (const l of a.legs) l.rotation.x = 0;
-        for (const arm of a.arms) arm.rotation.x = 0;
+        for (const l of a.legs) { l.rotation.x = 0; l.knee.rotation.x = 0; }
+        for (const arm of a.arms) { arm.rotation.x = 0; arm.elbow.rotation.x = 0; }
         e.pose(a, emoteT, e.dur);
       }
     } else emote = null;
