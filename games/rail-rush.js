@@ -8,7 +8,7 @@ const store = {
 // ---------- Avatar options ----------
 const CLOTHES = ['#ff4f7b', '#ffcf1a', '#33c27a', '#2f80ff', '#8a5cff', '#ff8a2a', '#00c2c7', '#1b1530', '#ffffff', '#7a8394'];
 const OPTIONS = {
-  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 50], ['silver', 'Quills', 50], ['gown', 'Big Bertha', 100], ['beehive', 'Marge Simpson', 100], ['merc', 'Red Renaldo', 100], ['straw', 'Straw Hat', 100], ['swords', 'Three Swords', 100], ['deku', 'Deku', 100], ['denki', 'Denki', 100], ['uraraka', 'Uraraka', 100], ['allmight', 'All Might', 100]] },
+  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 50], ['silver', 'Quills', 50], ['gown', 'Big Bertha', 100], ['beehive', 'Marge Simpson', 100], ['merc', 'Red Renaldo', 100], ['straw', 'Straw Hat', 100], ['swords', 'Three Swords', 100], ['deku', 'Deku', 100], ['denki', 'Denki', 100], ['uraraka', 'Uraraka', 100], ['allmight', 'All Might', 100], ['shoto', 'Shoto', 100], ['aizawa', 'Aizawa', 100]] },
   skin:      { label: 'Skin', type: 'color', values: ['#ffdbc2', '#f1c19b', '#d9a07a', '#b97850', '#8d5534', '#5c3720'] },
   hair:      { label: 'Hair', type: 'style', values: [['none', 'None'], ['short', 'Short'], ['spiky', 'Spiky'], ['long', 'Long'], ['bun', 'Bun'], ['mohawk', 'Mohawk']] },
   hairColor: { label: 'Hair color', type: 'color', values: ['#1c1410', '#5a3a22', '#a8642c', '#e8c46a', '#e2e2e2', '#ff5fa2', '#3fa9ff', '#5cd65c'] },
@@ -289,15 +289,15 @@ function animeFace(head, c, costume, skin) {
   const ex = (c.expression && c.expression !== 'normal') ? c.expression : (costume && costume.expression) || 'normal';
   const mouth = (c.mouth && c.mouth !== 'smile') ? c.mouth : (costume && costume.mouth) || 'smile';
   const ink = '#120d18', lip = '#7a1f2c';
-  const irisDark = '#' + new THREE.Color(iris).multiplyScalar(0.5).getHexString();
   for (const s of [-1, 1]) {
-    const x = s * 0.12;
+    const x = s * 0.12, eye = Array.isArray(iris) ? iris[s < 0 ? 0 : 1] : iris;
+    const irisDark = '#' + new THREE.Color(eye).multiplyScalar(0.5).getHexString();
     if (ex === 'happy' || (ex === 'wink' && s === -1)) {
       arc(0.058, 0.015, ink, x, 0.3, -0.285, head, true);
     } else {
       const wide = ex === 'surprised' ? 1.15 : 1, pupil = ex === 'surprised' ? 0.65 : 1;
       ball(0.08 * wide, '#ffffff', x, 0.3, -0.25, head, 1, 1.35, 0.35);
-      ball(0.056 * pupil, iris, x, 0.29, -0.272, head, 0.9, 1.25, 0.3).userData.noLine = true;
+      ball(0.056 * pupil, eye, x, 0.29, -0.272, head, 0.9, 1.25, 0.3).userData.noLine = true;
       ball(0.05 * pupil, irisDark, x, 0.315, -0.276, head, 0.95, 0.6, 0.3).userData.noLine = true;
       ball(0.028 * pupil, ink, x, 0.29, -0.284, head, 0.9, 1.2, 0.3);
       ball(0.02, '#ffffff', x + s * 0.016, 0.325, -0.296, head, 1, 1, 0.4);
@@ -405,6 +405,37 @@ function messyHair(head, color, len = 0.18, bangs = 0.16) {
   for (const x of [-0.16, -0.05, 0.06, 0.16]) strand(head, color, V(x, 0.56, -0.2), V(x * 1.2, -1, -0.45), 0.065, bangs);
 }
 const COSTUMES = {
+  shoto: {
+    eyes: ['#3fc6d6', '#9aa3ad'], brows: '#c9ccd2', expression: 'cool', mouth: 'line',
+    parts: { skin: '#f6d6c0', shirt: '#2c3e6e', sleeve: '#2c3e6e', hand: '#f6d6c0', pants: '#2c3e6e', shoes: '#1f2a44' },
+    decorate({ head, body, Y }) {
+      const V = (x, y, z) => new THREE.Vector3(x, y, z), red = '#c8322e', white = '#eef0f3';
+      for (const [col, start] of [[red, 0], [white, Math.PI]]) {                        // hair split down the middle
+        const cap = new THREE.Mesh(geo('SphereGeometry', 0.29, 20, 14, start, Math.PI), mat(col));
+        cap.position.set(0, 0.43, 0.06); head.add(cap);
+      }
+      for (const [x, tilt] of [[-0.17, -0.3], [-0.06, -0.1], [0.06, 0.1], [0.17, 0.3]]) strand(head, x < 0 ? red : white, V(x, 0.56, -0.2), V(tilt, -1, -0.4), 0.075, 0.25);
+      for (const s of [-1, 1]) strand(head, s < 0 ? red : white, V(s * 0.25, 0.45, -0.06), V(s * 0.12, -1, -0.1), 0.075, 0.28);
+      const scar = ball(0.085, '#b4524a', -0.13, 0.32, -0.255, head, 1.25, 1.1, 0.35); scar.userData.noLine = true; // burn scar
+      for (const s of [-1, 1]) { const strap = box(0.07, 0.75, 0.45, '#e8e8ec', s * 0.1, Y(1.27), 0, body); strap.rotation.z = s * 0.45; } // harness
+      box(0.78, 0.09, 0.44, '#e8e8ec', 0, Y(0.98), 0, body);
+    },
+  },
+  aizawa: {
+    eyes: '#2a2a2a', brows: '#1b1b1b', expression: 'cool', mouth: 'line',
+    parts: { skin: '#efcaa8', shirt: '#1b1b1b', sleeve: '#1b1b1b', hand: '#efcaa8', pants: '#1b1b1b', shoes: '#1b1b1b' },
+    decorate({ head, body, Y }) {
+      const V = (x, y, z) => new THREE.Vector3(x, y, z), scarf = '#c8ccd2';
+      messyHair(head, '#151515', 0.22, 0.22);
+      for (const s of [-1, 1]) for (const z of [-0.04, 0.1, 0.22]) strand(head, '#151515', V(s * 0.25, 0.42, z), V(s * 0.25, -1, 0.1), 0.08, 0.45);
+      ball(0.13, '#8a7464', 0, 0.12, -0.17, head, 1.2, 0.7, 0.7).userData.noLine = true;  // stubble
+      for (const [y, r] of [[1.62, 0.2], [1.55, 0.25], [1.48, 0.3]]) {                     // capture scarf wraps
+        const wrap = new THREE.Mesh(geo('TorusGeometry', r, 0.055, 8, 20), mat(scarf));
+        wrap.rotation.x = Math.PI / 2; wrap.position.set(0, Y(y), 0.02); body.add(wrap);
+      }
+      box(0.22, 0.07, 0.06, '#f2c230', 0, Y(1.58), -0.25, body);                           // goggles around the neck
+    },
+  },
   deku: {
     eyes: '#2f9e5a', brows: '#173d2e',
     parts: { skin: '#f3c9a6', shirt: '#2b6e55', sleeve: '#2b6e55', hand: '#f4f4f4', pants: '#2b6e55', shoes: '#d42a2a' },
