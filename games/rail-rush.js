@@ -8,7 +8,7 @@ const store = {
 // ---------- Avatar options ----------
 const CLOTHES = ['#ff4f7b', '#ffcf1a', '#33c27a', '#2f80ff', '#8a5cff', '#ff8a2a', '#00c2c7', '#1b1530', '#ffffff', '#7a8394'];
 const OPTIONS = {
-  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 50], ['silver', 'Quills', 50], ['gown', 'Big Bertha', 100], ['beehive', 'Marge Simpson', 100], ['merc', 'Red Renaldo', 100]] },
+  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 50], ['silver', 'Quills', 50], ['gown', 'Big Bertha', 100], ['beehive', 'Marge Simpson', 100], ['merc', 'Red Renaldo', 100], ['straw', 'Straw Hat', 100], ['swords', 'Three Swords', 100]] },
   skin:      { label: 'Skin', type: 'color', values: ['#ffdbc2', '#f1c19b', '#d9a07a', '#b97850', '#8d5534', '#5c3720'] },
   hair:      { label: 'Hair', type: 'style', values: [['none', 'None'], ['short', 'Short'], ['spiky', 'Spiky'], ['long', 'Long'], ['bun', 'Bun'], ['mohawk', 'Mohawk']] },
   hairColor: { label: 'Hair color', type: 'color', values: ['#1c1410', '#5a3a22', '#a8642c', '#e8c46a', '#e2e2e2', '#ff5fa2', '#3fa9ff', '#5cd65c'] },
@@ -285,11 +285,14 @@ const BROWS = { normal: [0.455, 0.24], happy: [0.475, -0.1], angry: [0.43, 0.55]
 const LIDS = { angry: [0.37, 0.38], sad: [0.37, -0.32], cool: [0.35, 0] };
 function animeFace(head, c, costume, skin) {
   const iris = (costume && costume.eyes) || c.eyes || '#7a3b2e', brow = (costume && costume.brows) || c.hairColor || '#1b1530';
-  const ex = c.expression || 'normal', mouth = c.mouth || 'smile', ink = '#120d18', lip = '#7a1f2c';
+  // An outfit's own face shows unless the player picked a different one.
+  const ex = (c.expression && c.expression !== 'normal') ? c.expression : (costume && costume.expression) || 'normal';
+  const mouth = (c.mouth && c.mouth !== 'smile') ? c.mouth : (costume && costume.mouth) || 'smile';
+  const ink = '#120d18', lip = '#7a1f2c';
   const irisDark = '#' + new THREE.Color(iris).multiplyScalar(0.5).getHexString();
   for (const s of [-1, 1]) {
     const x = s * 0.12;
-    if (ex === 'happy' || (ex === 'wink' && s === 1)) {
+    if (ex === 'happy' || (ex === 'wink' && s === -1)) {
       arc(0.058, 0.015, ink, x, 0.3, -0.285, head, true);
     } else {
       const wide = ex === 'surprised' ? 1.15 : 1, pupil = ex === 'surprised' ? 0.65 : 1;
@@ -316,16 +319,21 @@ function animeFace(head, c, costume, skin) {
   else if (mouth === 'line') box(0.11, 0.016, 0.02, lip, 0, mouthY, mz, head);
   else if (mouth === 'o') ball(0.028, lip, 0, mouthY, mz + 0.004, head, 1, 1.3, 0.3);
   else if (mouth === 'grin' || mouth === 'shout') {
-    const m = new THREE.Mesh(geo('CircleGeometry', mouth === 'shout' ? 0.06 : 0.07, 18, Math.PI, Math.PI), mat(lip));
+    const m = new THREE.Mesh(geo('CircleGeometry', mouth === 'shout' ? 0.075 : 0.07, 18, Math.PI, Math.PI), mat(lip));
     m.rotation.y = Math.PI; m.position.set(0, mouthY + 0.025, mz - 0.003); m.userData.noLine = true; head.add(m);
     if (mouth === 'shout') m.scale.y = 1.6;
-    box(mouth === 'shout' ? 0.09 : 0.11, 0.022, 0.012, '#ffffff', 0, mouthY + 0.013, mz - 0.006, head).userData.noLine = true;
+    box(mouth === 'shout' ? 0.13 : 0.11, 0.022, 0.012, '#ffffff', 0, mouthY + 0.013, mz - 0.006, head).userData.noLine = true;
     if (mouth === 'grin') ball(0.026, '#ff7b8a', 0, mouthY - 0.02, mz - 0.002, head, 1.3, 0.7, 0.3).userData.noLine = true;
   } else if (mouth === 'teeth') {
     box(0.15, 0.055, 0.012, '#ffffff', 0, mouthY, mz - 0.004, head);
     for (const tx of [-0.045, 0, 0.045]) box(0.006, 0.05, 0.014, ink, tx, mouthY, mz - 0.008, head).userData.noLine = true;
     box(0.14, 0.005, 0.014, ink, 0, mouthY, mz - 0.008, head).userData.noLine = true;
   }
+}
+// A flat V of bare skin on the chest, for open collars and robes.
+function vNeck(body, skin, halfWidth, height, y) {
+  const v = new THREE.Mesh(geo('ConeGeometry', halfWidth, height, 16), mat(skin));
+  v.rotation.z = Math.PI; v.scale.z = 0.06; v.position.set(0, y, -0.205); v.userData.noLine = true; body.add(v); return v;
 }
 // One lock of anime hair: a cone growing from `from` toward `dir`.
 function strand(head, color, from, dir, r, len) {
@@ -376,6 +384,43 @@ function tube(rTop, rBottom, h, color, x, y, z, parent) {
   m.position.set(x, y, z); parent.add(m); return m;
 }
 const COSTUMES = {
+  straw: {
+    eyes: '#1c1410', brows: '#1c1410', mouth: 'shout',
+    parts: { skin: '#f1c19b', shirt: '#d42a2a', sleeve: '#f1c19b', hand: '#f1c19b', pants: '#3a6fd8', shin: '#f1c19b', shoes: '#c8a060' },
+    decorate({ head, body, legs, Y }) {
+      const straw = '#e0c27a';
+      animeHair(head, '#1c1410', 'short');
+      tube(0.52, 0.52, 0.03, straw, 0, 0.56, 0.02, head);
+      tube(0.27, 0.3, 0.2, straw, 0, 0.68, 0.02, head);
+      tube(0.305, 0.305, 0.06, '#c8202a', 0, 0.61, 0.02, head);
+      box(0.06, 0.012, 0.012, '#8a3b2e', -0.13, 0.22, -0.275, head).rotation.z = 0.3;   // scar under the eye
+      vNeck(body, '#f1c19b', 0.12, 0.2, Y(1.5));                                        // open collar
+      for (const s of [-1, 1]) for (const y of [1.18, 1.36]) ball(0.026, '#e8c040', s * 0.11, Y(y), -0.215, body);
+      box(0.78, 0.09, 0.44, '#e8c040', 0, Y(0.98), 0, body);                             // sash
+      for (const leg of legs) box(0.3, 0.07, 0.3, '#f4f4f4', 0, -0.36, 0, leg);          // fluffy cuffs
+    },
+  },
+  swords: {
+    eyes: '#1c1410', brows: '#2f6b3a', expression: 'wink', mouth: 'grin',
+    parts: { skin: '#e0a878', shirt: '#2f7a3a', sleeve: '#2f7a3a', hand: '#e0a878', pants: '#1f2a24', shoes: '#1b1b1b' },
+    decorate({ head, body, arms, Y }) {
+      const green = '#5fbf6a', V = (x, y, z) => new THREE.Vector3(x, y, z);
+      ball(0.285, green, 0, 0.42, 0.06, head);
+      for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; strand(head, green, V(Math.sin(a) * 0.17, 0.55, Math.cos(a) * 0.17 + 0.04), V(Math.sin(a) * 0.5, 1, Math.cos(a) * 0.5), 0.06, 0.13); }
+      for (const x of [-0.14, 0, 0.14]) strand(head, green, V(x, 0.56, -0.17), V(x, -0.4, -1), 0.05, 0.1);
+      box(0.012, 0.2, 0.012, '#8a3b2e', -0.12, 0.31, -0.29, head);                      // scar over the closed eye
+      for (const dz of [-0.03, 0, 0.03]) box(0.012, 0.07, 0.012, '#e8c040', -0.29, 0.13, dz, head); // earrings
+      vNeck(body, '#e0a878', 0.2, 0.5, Y(1.34));                                        // open robe
+      const scar = box(0.014, 0.46, 0.012, '#8a3b2e', 0, Y(1.3), -0.228, body); scar.rotation.z = 0.6;
+      for (let i = -3; i <= 3; i++) box(0.04, 0.008, 0.012, '#8a3b2e', -Math.sin(0.6) * i * 0.06, Y(1.3) + Math.cos(0.6) * i * 0.06, -0.23, body).rotation.z = 0.6 + Math.PI / 2;
+      box(0.78, 0.14, 0.44, '#1f5a2a', 0, Y(0.98), 0, body);                             // sash
+      box(0.26, 0.08, 0.26, '#1b1b1b', 0, -0.13, 0, arms[1]);                            // bandana on the arm
+      [['#f2f2f2', 0.24], ['#1b1b1b', 0.31], ['#8a1f2a', 0.38]].forEach(([c, x], i) => {  // three swords at the hip
+        const sword = new THREE.Group(); sword.position.set(x, Y(0.92), 0.05 - i * 0.05); sword.rotation.set(0.15, 0, 1.25); body.add(sword);
+        box(0.05, 0.78, 0.05, c, 0, -0.1, 0, sword); box(0.06, 0.22, 0.06, '#2a2a2a', 0, 0.38, 0, sword); box(0.13, 0.03, 0.09, '#d4af37', 0, 0.27, 0, sword);
+      });
+    },
+  },
   merc: {
     face: false,
     parts: { skin: '#c8202a', shirt: '#c8202a', sleeve: '#c8202a', hand: '#1f1f24', pants: '#c8202a', shoes: '#c8202a' },
@@ -563,8 +608,8 @@ function buildRunner(c) {
     ball(0.15 * t, P.pants, 0, 0, 0, hip);
     limb(0.13 * t, 0.11 * t, 0, -0.38, P.pants, hip);
     const knee = new THREE.Group(); knee.position.y = -0.38; hip.add(knee);
-    ball(0.11 * t, P.pants, 0, 0, 0, knee);
-    limb(0.11 * t, 0.085 * t, 0, -0.33, P.pants, knee);
+    ball(0.11 * t, P.shin || P.pants, 0, 0, 0, knee);
+    limb(0.11 * t, 0.085 * t, 0, -0.33, P.shin || P.pants, knee);
     box(0.19 * t + 0.03, 0.12, 0.36, P.shoes, 0, -0.37, -0.06, knee);
     hip.knee = knee; legs.push(hip);
 
