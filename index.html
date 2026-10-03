@@ -173,7 +173,7 @@ const store = {
 // ---------- Avatar options ----------
 const CLOTHES = ['#ff4f7b', '#ffcf1a', '#33c27a', '#2f80ff', '#8a5cff', '#ff8a2a', '#00c2c7', '#1b1530', '#ffffff', '#7a8394'];
 const OPTIONS = {
-  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['pup', 'Milo', 75], ['alien', 'Alina', 100], ['beehive', 'Marge Simpson', 150], ['silver', 'Quills', 200], ['gown', 'Big Bertha', 250], ['merc', 'Red Renaldo', 300]] },
+  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 50], ['silver', 'Quills', 50], ['gown', 'Big Bertha', 100], ['beehive', 'Marge Simpson', 100], ['merc', 'Red Renaldo', 100]] },
   skin:      { label: 'Skin', type: 'color', values: ['#ffdbc2', '#f1c19b', '#d9a07a', '#b97850', '#8d5534', '#5c3720'] },
   hair:      { label: 'Hair', type: 'style', values: [['none', 'None'], ['short', 'Short'], ['spiky', 'Spiky'], ['long', 'Long'], ['bun', 'Bun'], ['mohawk', 'Mohawk']] },
   hairColor: { label: 'Hair color', type: 'color', values: ['#1c1410', '#5a3a22', '#a8642c', '#e8c46a', '#e2e2e2', '#ff5fa2', '#3fa9ff', '#5cd65c'] },
@@ -183,7 +183,7 @@ const OPTIONS = {
   hat:       { label: 'Hat', type: 'style', values: [['none', 'None'], ['cap', 'Cap'], ['beanie', 'Beanie'], ['headphones', 'Headphones'], ['crown', 'Crown', 150]] },
   hatColor:  { label: 'Hat & bag color', type: 'color', values: CLOTHES },
   extra:     { label: 'Extra', type: 'style', values: [['none', 'None'], ['glasses', 'Glasses'], ['backpack', 'Backpack'], ['cape', 'Cape', 100]] },
-  pet:       { label: 'Pet', type: 'style', values: [['none', 'None'], ['pup', 'Pup'], ['fox', 'Two-tail Fox']] },
+  pet:       { label: 'Pet', type: 'style', values: [['none', 'None'], ['pup', 'Milo', 50], ['fox', 'Tails', 50]] },
 };
 const DEFAULT_AVATAR = { outfit: 'custom', pet: 'none', skin: '#f1c19b', hair: 'short', hairColor: '#5a3a22', shirt: '#ff4f7b', pants: '#2f80ff',
   shoes: '#ffffff', hat: 'cap', hatColor: '#ffcf1a', extra: 'backpack' };
