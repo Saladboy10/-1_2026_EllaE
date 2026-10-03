@@ -78,6 +78,7 @@
   #tip { position: absolute; left: 50%; top: 38%; transform: translateX(-50%); font-family: var(--display);
     color: var(--paper); -webkit-text-stroke: 1px var(--ink); text-shadow: 0 3px 0 var(--ink); text-align: center;
     font-size: 1.2rem; pointer-events: none; transition: opacity .6s; width: calc(100% - 32px); }
+  .emote-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
   .name-field { display: flex; flex-direction: column; gap: 6px; }
   .name-field span { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
   #runnerName { font: inherit; font-weight: 800; font-size: 1.1rem; padding: 10px 12px; border: 3px solid var(--ink);
@@ -115,6 +116,7 @@
       <div class="stat"><b id="menuBest">0</b><span>Best</span></div>
       <div class="stat"><b id="menuBank">0</b><span>Coins</span></div>
     </div>
+    <div class="emote-bar" id="menuEmotes" aria-label="Emotes"></div>
     <button class="btn primary" id="playBtn">Run!</button>
     <button class="btn" id="customBtn">Customize avatar</button>
   </section>
@@ -125,7 +127,8 @@
       <span class="bank"><span class="coin"></span> <span id="customBank">0</span></span>
     </header>
     <label class="name-field" for="runnerName"><span>Name</span>
-      <input id="runnerName" type="text" maxlength="16" placeholder="Type your name" autocomplete="off" spellcheck="false" enterkeyhint="done"></label>
+      <input id="runnerName" type="text" maxlength="16" placeholder="Type your name" autocomplete="off" spellcheck="false" enterkeyhint="done">
+      <small class="hint">Your name stays the same whatever outfit you wear.</small></label>
     <div id="options"></div>
     <div class="row">
       <button class="btn" id="randomBtn">Surprise me</button>
@@ -170,7 +173,7 @@ const store = {
 // ---------- Avatar options ----------
 const CLOTHES = ['#ff4f7b', '#ffcf1a', '#33c27a', '#2f80ff', '#8a5cff', '#ff8a2a', '#00c2c7', '#1b1530', '#ffffff', '#7a8394'];
 const OPTIONS = {
-  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['merc', 'Red Renaldo'], ['pup', 'Fluffy Pup'], ['gown', 'Big Bertha'], ['alien', 'Dancing Alien'], ['beehive', 'Big Blue Hair'], ['silver', 'Silver Quills']] },
+  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['pup', 'Fluffy Pup', 75], ['alien', 'Dancing Alien', 100], ['beehive', 'Big Blue Hair', 150], ['silver', 'Silver Quills', 200], ['gown', 'Big Bertha', 250], ['merc', 'Red Renaldo', 300]] },
   skin:      { label: 'Skin', type: 'color', values: ['#ffdbc2', '#f1c19b', '#d9a07a', '#b97850', '#8d5534', '#5c3720'] },
   hair:      { label: 'Hair', type: 'style', values: [['none', 'None'], ['short', 'Short'], ['spiky', 'Spiky'], ['long', 'Long'], ['bun', 'Bun'], ['mohawk', 'Mohawk']] },
   hairColor: { label: 'Hair color', type: 'color', values: ['#1c1410', '#5a3a22', '#a8642c', '#e8c46a', '#e2e2e2', '#ff5fa2', '#3fa9ff', '#5cd65c'] },
@@ -188,6 +191,59 @@ const DEFAULT_AVATAR = { outfit: 'custom', pet: 'none', skin: '#f1c19b', hair: '
 let runnerName = store.get('name', '');
 let avatarCfg = { ...DEFAULT_AVATAR, ...store.get('avatar', {}) };
 let owned = store.get('owned', []);
+for (const [key, opt] of Object.entries(OPTIONS)) {
+  if (opt.type !== 'style') continue;
+  const v = opt.values.find(x => x[0] === avatarCfg[key]);
+  if (!v || (v[2] && !owned.includes(key + ':' + v[0]))) avatarCfg[key] = DEFAULT_AVATAR[key];
+}
+
+// ---------- Emotes ----------
+const ramp = (t, d, r = 0.25) => Math.max(0, Math.min(1, t / r, (d - t) / r));
+const EMOTES = {
+  wave: { name: 'Wave', dur: 2.2, pose(a, t, d) {
+    const k = ramp(t, d);
+    a.arms[1].rotation.z = k * (2.5 + Math.sin(t * 10) * 0.35); a.head.rotation.z = -0.15 * k;
+  } },
+  dance: { name: 'Dance', dur: 3.2, pose(a, t, d) {
+    const k = ramp(t, d), b = t * 7;
+    a.body.position.y = 0.95 + Math.abs(Math.sin(b)) * 0.12 * k; a.body.rotation.z = Math.sin(b) * 0.2 * k;
+    a.arms[0].rotation.z = -k * (1.6 + Math.sin(b) * 0.9); a.arms[1].rotation.z = k * (1.6 - Math.sin(b) * 0.9);
+    a.legs.forEach((l, i) => { l.rotation.x = Math.max(0, Math.sin(b + i * Math.PI)) * 0.8 * k; });
+    a.head.rotation.z = Math.sin(b) * 0.2 * k;
+  } },
+  floss: { name: 'Floss', dur: 3, pose(a, t, d) {
+    const k = ramp(t, d), f = Math.sin(t * 9), g = Math.cos(t * 9);
+    a.arms.forEach((arm, i) => { arm.rotation.z = f * 0.7 * k; arm.rotation.x = (i ? 1 : -1) * g * 0.45 * k; });
+    a.body.rotation.z = -f * 0.18 * k;
+  } },
+  spin: { name: 'Spin', dur: 1.8, price: 50, pose(a, t, d) {
+    const k = ramp(t, d, 0.15), p = t / d, e = p < 0.5 ? 2 * p * p : 1 - 2 * (1 - p) * (1 - p);
+    a.root.rotation.y = e * Math.PI * 4; a.arms[0].rotation.z = -1.4 * k; a.arms[1].rotation.z = 1.4 * k; a.legs[0].rotation.x = 0.3 * k;
+  } },
+  joy: { name: 'Jump for Joy', dur: 1.8, price: 75, pose(a, t, d) {
+    const k = ramp(t, d, 0.15), h = Math.abs(Math.sin(t * Math.PI / 0.9));
+    a.root.position.y += h * 0.9; a.arms[0].rotation.z = -2.8 * k; a.arms[1].rotation.z = 2.8 * k;
+    a.legs[0].rotation.x = h * 0.9; a.legs[1].rotation.x = -h * 0.5;
+  } },
+  dab: { name: 'Dab', dur: 2, price: 100, pose(a, t, d) {
+    const k = ramp(t, d, 0.2);
+    a.arms[1].rotation.z = 2.3 * k; a.arms[0].rotation.x = 1.7 * k; a.arms[0].rotation.z = 1.0 * k;
+    a.head.rotation.x = -0.35 * k; a.head.rotation.z = 0.35 * k; a.body.rotation.z = -0.1 * k;
+  } },
+};
+const emoteOwned = id => !EMOTES[id].price || owned.includes('emote:' + id);
+let emote = null, emoteT = 0;
+function playEmote(id) { if (emoteOwned(id)) { emote = id; emoteT = 0; } }
+
+// Buying takes two taps so nothing gets bought by accident.
+let pendingBuy = null;
+function buy(key, name, price) {
+  if (owned.includes(key)) return true;
+  if (bank < price) { toast(`${name} costs ${price} coins. You have ${bank}. Keep running!`); return false; }
+  if (pendingBuy !== key) { pendingBuy = key; toast(`Tap ${name} again to buy it for ${price} coins.`); renderCustom(); return false; }
+  pendingBuy = null; bank -= price; owned.push(key); store.set('bank', bank); store.set('owned', owned);
+  toast(`You bought ${name}!`); refreshMenu(); return true;
+}
 let bank = store.get('bank', 0);
 let best = store.get('best', 0);
 
@@ -630,6 +686,7 @@ function show(id) {
   $('#hud').hidden = !(state === 'play' || state === 'pause' || state === 'over');
 }
 function refreshMenu() {
+  renderMenuEmotes();
   $('#menuBest').textContent = best; $('#menuBank').textContent = bank; $('#customBank').textContent = bank;
 }
 function toMenu() {
@@ -690,6 +747,7 @@ window.addEventListener('keydown', e => {
   else if (['arrowdown', 's'].includes(k)) roll();
   else if (k === 'p' || k === 'escape') state === 'play' ? pause() : resume();
   else if (k === 'enter' && (state === 'menu' || state === 'over')) startRun();
+  else if (/^[1-6]$/.test(k) && (state === 'menu' || state === 'custom')) playEmote(Object.keys(EMOTES)[+k - 1]);
 });
 let touchStart = null;
 const app = $('#app');
@@ -745,20 +803,40 @@ function renderCustom() {
       } else {
         [value, name, price] = v; locked = !!price && !owned.includes(key + ':' + value);
         b.className = 'chip' + (locked ? ' locked' : '');
-        b.innerHTML = locked ? `${name} · <span class="coin"></span> ${price}` : name;
+        b.innerHTML = locked ? `${pendingBuy === key + ':' + value ? 'Tap again to buy' : name} · <span class="coin"></span> ${price}` : name;
       }
       b.setAttribute('aria-pressed', String(avatarCfg[key] === value));
       b.onclick = () => {
-        if (locked) {
-          if (bank < price) { toast(`${name} costs ${price} coins. You have ${bank}. Keep running!`); return; }
-          bank -= price; owned.push(key + ':' + value); store.set('bank', bank); store.set('owned', owned);
-          toast(`Unlocked ${name}!`); refreshMenu();
-        }
+        if (locked && !buy(key + ':' + value, name, price)) return;
+        pendingBuy = null;
         avatarCfg[key] = value; store.set('avatar', avatarCfg); rebuildAvatar(); renderCustom();
       };
       chips.appendChild(b);
     }
     wrap.appendChild(fs);
+  }
+  const fs = document.createElement('fieldset');
+  fs.innerHTML = '<legend>Emotes</legend><div class="chips"></div>';
+  for (const [id, e] of Object.entries(EMOTES)) {
+    const b = document.createElement('button'); b.type = 'button';
+    const locked = !emoteOwned(id), key = 'emote:' + id;
+    b.className = 'chip' + (locked ? ' locked' : '');
+    b.innerHTML = locked ? `${pendingBuy === key ? 'Tap again to buy' : e.name} · <span class="coin"></span> ${e.price}` : e.name;
+    b.onclick = () => {
+      if (locked && !buy(key, e.name, e.price)) return;
+      pendingBuy = null; playEmote(id); renderCustom();
+    };
+    fs.lastChild.appendChild(b);
+  }
+  wrap.appendChild(fs);
+}
+function renderMenuEmotes() {
+  const bar = $('#menuEmotes'); bar.innerHTML = '';
+  for (const [id, e] of Object.entries(EMOTES)) {
+    if (!emoteOwned(id)) continue;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = e.name;
+    b.onclick = () => playEmote(id);
+    bar.appendChild(b);
   }
 }
 
@@ -847,6 +925,19 @@ function update(dt) {
     if (a.cape) a.cape.rotation.x = -(running ? 0.5 + speed * 0.01 : 0.2) - Math.sin(animT * 2) * 0.08;
     if (state === 'menu') a.root.rotation.y = Math.sin(performance.now() / 1600) * 0.5;
     else if (state === 'custom') a.root.rotation.y += dt * 0.7;
+    for (const arm of a.arms) arm.rotation.z = 0;
+    a.head.rotation.set(0, 0, 0);
+    if (emote && (state === 'menu' || state === 'custom')) {
+      const e = EMOTES[emote];
+      emoteT += dt;
+      if (emoteT >= e.dur) emote = null;
+      else {
+        a.body.rotation.set(0, 0, 0); a.body.position.y = 0.95; a.root.rotation.y = 0;
+        for (const l of a.legs) l.rotation.x = 0;
+        for (const arm of a.arms) arm.rotation.x = 0;
+        e.pose(a, emoteT, e.dur);
+      }
+    } else emote = null;
   }
 
   sleeperGroup.position.z = dist % SLEEPER_GAP;
