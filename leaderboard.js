@@ -98,7 +98,10 @@ const Leaderboard = (() => {
       return { ok: false, reason: e && e.code === 'invalid_argument' ? 'readonly' : 'error' };
     }
   }
-  async function isOwner() { await connect(); return viewer ? viewer.isOwner() : false; }
+  async function isOwner() {
+    await connect();
+    try { return !!(viewer && viewer.isOwner && await viewer.isOwner()); } catch { return false; }
+  }
   async function listRequests() {
     const db = await connect();
     if (!db) return [];
