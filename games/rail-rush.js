@@ -560,7 +560,8 @@ function crash() {
 // Each code works for only CODE_LIMIT players in total (a code can set its own `max`).
 const CODE_LIMIT = 3;
 const CODES = {
-  '13190cf8': { coins: 100 },
+  '13190cf8': { coins: 200 },
+  'ff0c36a1': { unlock: ['emote:spin', 'emote:joy', 'emote:dab'] },
 };
 function codeHash(text) {
   let h = 0x811c9dc5;
@@ -605,7 +606,8 @@ async function redeemCode() {
   store.set('bank', bank); store.set('owned', owned);
   codeInput.value = '';
   const spots = claim.ok ? ` (${claim.used} of ${max} spots used)` : '';
-  codeMessage(`Code worked! You got ${got.join(' and ')}.${spots}`, true);
+  const list = got.length > 1 ? got.slice(0, -1).join(', ') + ' and ' + got[got.length - 1] : got[0];
+  codeMessage(`Code worked! You got ${list}.${spots}`, true);
   sfx('coin'); refreshMenu();
 }
 $('#codesBtn').onclick = () => { codeMessage('', true); show('#codes'); codeInput.focus(); };
