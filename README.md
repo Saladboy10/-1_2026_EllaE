@@ -14,7 +14,7 @@ Open `index.html` in a web browser for the **Level Up** game lobby, then pick a 
 2. Swap one of the "Coming soon" slots for a game card with a `data-game` Play button and a picture in `assets/`.
 3. For a leaderboard, call `Leaderboard.submit('<game>', { name, score })` when a game ends and `Leaderboard.watch('<game>', 10, rows => ...)` to show it.
 
-## Rail Rush
+## Dodge and Weave
 A 3D endless runner. Dodge trains and barriers across three tracks, grab coins, and see how far you get.
 
 - **Move:** ← → (or A / D), or swipe left/right

@@ -1,4 +1,4 @@
-// Rail Rush: a 3D endless runner. Loaded by index.html after three.js and leaderboard.js.
+// Dodge and Weave: a 3D endless runner. Loaded by index.html after three.js and leaderboard.js.
 const $ = s => document.querySelector(s);
 const store = {
   get(k, d) { try { const v = localStorage.getItem('railrush.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
