@@ -37,9 +37,18 @@
     border-radius: 999px; background: var(--mist); border: 2px solid var(--ink); font-variant-numeric: tabular-nums; }
   #lobby .pill.best { background: var(--signal); }
   #lobby .top { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-variant-numeric: tabular-nums; }
-  #lobby .leaders { display: flex; flex-direction: column; gap: 6px; border-top: 2px dashed var(--ink); padding-top: 12px; }
-  #lobby .leaders h4 { font-family: var(--display); font-weight: 400; font-size: 1.05rem; margin: 0; }
-  #lobby .leaders-head, #lobby .top li { display: grid; grid-template-columns: 4em minmax(0, 1fr) auto; gap: 8px; padding: 3px 10px; }
+  #lobby .actions { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  #lobby .board-btn { font-family: var(--display); font-size: 1rem; padding: 12px 10px; border: 3px solid var(--ink); border-radius: 14px;
+    background: var(--mist); color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; }
+  #lobby .board-btn:active, #lobby .back:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  #lobby .board-btn:focus-visible, #lobby .back:focus-visible { outline: 3px solid var(--spray); outline-offset: 3px; }
+  #lobby .back { align-self: flex-start; font-family: var(--display); font-size: 1rem; padding: 10px 16px; border: 3px solid var(--ink);
+    border-radius: 14px; background: var(--paper); color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; }
+  #lobby #leaderPage { max-width: 640px; }
+  #lobby .leaders { display: flex; flex-direction: column; gap: 6px; background: var(--paper); border: 3px solid var(--ink);
+    border-radius: 20px; box-shadow: 0 6px 0 var(--ink); padding: 18px; }
+  #lobby .leaders .top li { font-size: 1.05rem; padding-block: 6px; }
+  #lobby .leaders-head, #lobby .top li { display: grid; grid-template-columns: 4.2rem minmax(0, 1fr) auto; gap: 8px; padding: 3px 10px; }
   #lobby .leaders-head { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; opacity: .7; }
   #lobby .top li { border-radius: 10px; background: var(--mist); }
   #lobby .top li:nth-child(-n+3) { font-weight: 800; }
@@ -47,7 +56,7 @@
   #lobby .leaders-note { margin: 0; font-size: .9rem; opacity: .75; }
   #lobby .top li.me { background: var(--signal); font-weight: 800; }
   #lobby .top .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #lobby .play { margin-top: auto; display: block; width: 100%; text-align: center; color: var(--ink);
+  #lobby .play { display: block; width: 100%; text-align: center; color: var(--ink);
     font-family: var(--display); font-size: 1.3rem; padding: 12px 16px; border: 3px solid var(--ink); border-radius: 14px;
     background: var(--signal); box-shadow: 0 4px 0 var(--ink); transition: transform .06s; cursor: pointer; }
   #lobby .play:hover { filter: brightness(1.05); }
@@ -149,12 +158,9 @@
             <span class="pill">3D runner</span>
             <span class="pill best" id="best-railrush" hidden></span>
           </div>
-          <button class="play" type="button" data-game="railrush">Play</button>
-          <div class="leaders" id="top-railrush">
-            <h4>Leaderboard · Top 20</h4>
-            <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
-            <ol class="top"></ol>
-            <p class="leaders-note">Loading scores…</p>
+          <div class="actions">
+            <button class="play" type="button" data-game="railrush">Play</button>
+            <button class="board-btn" type="button" data-board="railrush">Leaderboard</button>
           </div>
         </div>
       </article>
@@ -169,6 +175,19 @@
       <div class="slot"><b>?</b><span>Next game</span></div>
     </div>
   </section>
+</main>
+
+<main id="leaderPage" hidden>
+  <button class="back" id="leaderBack" type="button">← Back to lobby</button>
+  <header>
+    <h1 id="leaderTitle">Leaderboard</h1>
+    <p class="tagline">The top 20 players and their best scores.</p>
+  </header>
+  <div class="leaders" id="top-railrush" data-board="railrush" data-title="Rail Rush">
+    <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
+    <ol class="top"></ol>
+    <p class="leaders-note">Loading scores…</p>
+  </div>
 </main>
 </section>
 
@@ -187,10 +206,22 @@
     pill.hidden = !best; pill.textContent = 'Best ' + best;
   }
   window.Lobby = {
-    show() { for (const g of Object.values(GAMES)) g()?.close(); refresh(); lobby.hidden = false; lobby.scrollTop = 0; },
+    show() { for (const g of Object.values(GAMES)) g()?.close(); refresh(); showHome(); lobby.hidden = false; },
     open(id) { lobby.hidden = true; GAMES[id]()?.open(); },
   };
   for (const btn of document.querySelectorAll('#lobby [data-game]')) btn.onclick = () => Lobby.open(btn.dataset.game);
+
+  // Leaderboard screen: one per game, reached from the card's Leaderboard button.
+  const home = lobby.querySelector('main:not(#leaderPage)'), leaderPage = document.getElementById('leaderPage');
+  function showBoard(id) {
+    for (const box of leaderPage.querySelectorAll('.leaders')) box.hidden = box.dataset.board !== id;
+    document.getElementById('leaderTitle').textContent = leaderPage.querySelector(`[data-board="${id}"]`).dataset.title + ' Leaderboard';
+    home.hidden = true; leaderPage.hidden = false; lobby.scrollTop = 0;
+    document.getElementById('leaderBack').focus();
+  }
+  function showHome() { leaderPage.hidden = true; home.hidden = false; lobby.scrollTop = 0; }
+  for (const btn of document.querySelectorAll('#lobby [data-board].board-btn')) btn.onclick = () => showBoard(btn.dataset.board);
+  document.getElementById('leaderBack').onclick = showHome;
 
   // Top 20 under each game's card, live.
   const place = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
