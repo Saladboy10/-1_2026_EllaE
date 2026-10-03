@@ -1,6 +1,6 @@
 # Games
 
-Open `index.html` in a web browser for the **Game Lobby**, then pick a game. No install needed.
+Open `index.html` in a web browser for the **Level Up** game lobby, then pick a game. No install needed.
 Each game has a button to get back to the lobby.
 
 ## Adding a new game
