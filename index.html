@@ -2,68 +2,129 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Level Up</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="games/rail-rush.css">
 <style>
-  /* Layout: one centered column; game cards in a wrapping grid, upcoming games as dashed empty slots. */
-  :root {
-    --sky: #8fd3ff;
+  /* Lobby: a full-screen layer over the games. One centered column; game cards in a
+     wrapping grid, upcoming games as dashed empty slots. */
+  #lobby {
     --sky-deep: #5fb8f0;
-    --ink: #1b1530;
-    --paper: #ffffff;
-    --signal: #ffcf1a;
-    --spray: #ff4f7b;
-    --mist: #e9f1fb;
-    --display: "Bungee", "Arial Black", Impact, sans-serif;
-    --body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
-    color-scheme: light;
+    position: fixed; inset: 0; z-index: 20; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    background: var(--sky) linear-gradient(180deg, var(--sky) 0%, var(--sky-deep) 100%);
+    color: var(--ink); font-family: var(--body); font-weight: 600; touch-action: pan-y;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  * { box-sizing: border-box; }
-  [hidden] { display: none !important; }
-  html { min-height: 100%; }
-  body { min-height: 100vh; }
-  body { margin: 0; min-height: 100%; color: var(--ink); font-family: var(--body); font-weight: 600;
-    background: var(--sky) linear-gradient(180deg, var(--sky) 0%, var(--sky-deep) 100%); }
-  html { background: var(--sky-deep); }
-  main { max-width: 1040px; margin: 0 auto; padding-inline: 16px; padding-block: 40px 56px; display: flex; flex-direction: column; gap: 36px; }
-
-  header { display: flex; flex-direction: column; gap: 10px; }
-  h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 10vw, 4.8rem); line-height: .95; margin: 0;
+  #lobby main { max-width: 1040px; margin: 0 auto; padding-inline: 16px; padding-block: 40px 56px; display: flex; flex-direction: column; gap: 36px; }
+  #lobby header { display: flex; flex-direction: column; gap: 10px; }
+  #lobby h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 10vw, 4.8rem); line-height: .95; margin: 0;
     color: var(--signal); -webkit-text-stroke: 2px var(--ink); text-shadow: 0 6px 0 var(--ink); text-wrap: balance; }
-  .tagline { margin: 0; font-size: 1.15rem; max-width: 40em; }
-
-  h2 { font-family: var(--display); font-weight: 400; font-size: 1.4rem; margin: 0 0 14px; letter-spacing: .02em; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-
-  .card { background: var(--paper); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 6px 0 var(--ink);
+  #lobby .tagline { margin: 0; font-size: 1.15rem; max-width: 40em; }
+  #lobby h2 { font-family: var(--display); font-weight: 400; font-size: 1.4rem; margin: 0 0 14px; letter-spacing: .02em;
+    color: var(--ink); -webkit-text-stroke: 0; text-shadow: none; }
+  #lobby .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+  #lobby .card { background: var(--paper); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 6px 0 var(--ink);
     overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
-  .card img { display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-bottom: 3px solid var(--ink); background: var(--mist); }
-  .card-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-  .card h3 { font-family: var(--display); font-weight: 400; font-size: 1.5rem; margin: 0; }
-  .card p { margin: 0; line-height: 1.45; }
-  .meta { display: flex; flex-wrap: wrap; gap: 6px; }
-  .pill { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; padding: 4px 10px;
+  #lobby .card img { display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-bottom: 3px solid var(--ink); background: var(--mist); }
+  #lobby .card-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  #lobby .card h3 { font-family: var(--display); font-weight: 400; font-size: 1.5rem; margin: 0; }
+  #lobby .card p { margin: 0; line-height: 1.45; }
+  #lobby .meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  #lobby .pill { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; padding: 4px 10px;
     border-radius: 999px; background: var(--mist); border: 2px solid var(--ink); font-variant-numeric: tabular-nums; }
-  .pill.best { background: var(--signal); }
-  .play { margin-top: auto; display: block; text-align: center; text-decoration: none; color: var(--ink);
+  #lobby .pill.best { background: var(--signal); }
+  #lobby .top { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-variant-numeric: tabular-nums; }
+  #lobby .top-title { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+  #lobby .top li { display: grid; grid-template-columns: 1.6em minmax(0, 1fr) auto; gap: 8px; padding: 3px 10px; border-radius: 10px; background: var(--mist); }
+  #lobby .top li.me { background: var(--signal); font-weight: 800; }
+  #lobby .top .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #lobby .play { margin-top: auto; display: block; width: 100%; text-align: center; color: var(--ink);
     font-family: var(--display); font-size: 1.3rem; padding: 12px 16px; border: 3px solid var(--ink); border-radius: 14px;
-    background: var(--signal); box-shadow: 0 4px 0 var(--ink); transition: transform .06s; }
-  .play:hover { filter: brightness(1.05); }
-  .play:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
-  .play:focus-visible { outline: 3px solid var(--spray); outline-offset: 3px; }
-
-  .slot { border: 3px dashed var(--ink); border-radius: 20px; background: rgba(255,255,255,.35); min-height: 180px;
+    background: var(--signal); box-shadow: 0 4px 0 var(--ink); transition: transform .06s; cursor: pointer; }
+  #lobby .play:hover { filter: brightness(1.05); }
+  #lobby .play:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  #lobby .play:focus-visible { outline: 3px solid var(--spray); outline-offset: 3px; }
+  #lobby .slot { border: 3px dashed var(--ink); border-radius: 20px; background: rgba(255,255,255,.35); min-height: 180px;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 20px; text-align: center; }
-  .slot b { font-family: var(--display); font-weight: 400; font-size: 2.6rem; line-height: 1; opacity: .5; }
-  .slot span { font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; opacity: .7; }
-
-  @media (prefers-reduced-motion: reduce) { .play { transition: none; } }
+  #lobby .slot b { font-family: var(--display); font-weight: 400; font-size: 2.6rem; line-height: 1; opacity: .5; }
+  #lobby .slot span { font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; opacity: .7; }
+  @media (prefers-reduced-motion: reduce) { #lobby .play { transition: none; } }
 </style>
 </head>
 <body>
+<div id="app">
+  <canvas id="c"></canvas>
+
+  <div id="hud" hidden>
+    <div><div id="score">0</div></div>
+    <div class="right"><span><span class="coin"></span> <span id="coins">0</span></span>
+      <button class="icon-btn" id="pauseBtn" aria-label="Pause">II</button></div>
+  </div>
+  <div id="tip" hidden>Swipe or use arrow keys<br>← → move · ↑ jump · ↓ roll</div>
+
+  <section id="menu" class="panel center">
+    <h1 class="logo">Rail Rush</h1>
+    <div class="stats">
+      <div class="stat"><b id="menuBest">0</b><span>Best</span></div>
+      <div class="stat"><b id="menuBank">0</b><span>Coins</span></div>
+    </div>
+    <div class="emote-bar" id="menuEmotes" aria-label="Emotes"></div>
+    <button class="btn primary" id="playBtn">Run!</button>
+    <button class="btn" id="customBtn">Customize avatar</button>
+    <button class="btn" id="lobbyLink" type="button">Back to lobby</button>
+  </section>
+
+  <section id="custom" class="panel" hidden>
+    <header>
+      <h2>Your runner</h2>
+      <span class="bank"><span class="coin"></span> <span id="customBank">0</span></span>
+    </header>
+    <label class="name-field" for="runnerName"><span>Name</span>
+      <input id="runnerName" type="text" maxlength="16" placeholder="Type your name" autocomplete="off" spellcheck="false" enterkeyhint="done">
+      <small class="hint">Your name stays the same whatever outfit you wear.</small></label>
+    <div id="options"></div>
+    <div class="row">
+      <button class="btn" id="randomBtn">Surprise me</button>
+      <button class="btn primary" id="doneBtn">Done</button>
+    </div>
+  </section>
+
+  <section id="over" class="panel center" hidden>
+    <h2>Crashed!</h2>
+    <div class="stats">
+      <div class="stat"><b id="overScore">0</b><span>Score</span></div>
+      <div class="stat"><b id="overCoins">0</b><span>Coins</span></div>
+      <div class="stat"><b id="overBest">0</b><span>Best</span></div>
+    </div>
+    <p class="hint" id="overNote"></p>
+    <div class="board" id="overBoard" hidden>
+      <h3>Leaderboard</h3>
+      <ol id="boardList"></ol>
+      <p class="hint" id="boardStatus"></p>
+    </div>
+    <button class="btn primary" id="againBtn">Run again</button>
+    <div class="row">
+      <button class="btn" id="overCustomBtn">Avatar</button>
+      <button class="btn" id="overMenuBtn">Menu</button>
+    </div>
+  </section>
+
+  <section id="paused" class="panel center" hidden>
+    <h2>Paused</h2>
+    <button class="btn primary" id="resumeBtn">Keep running</button>
+    <button class="btn" id="quitBtn">Quit to menu</button>
+  </section>
+
+  <div id="nameTag" hidden></div>
+  <div id="toast" role="status"></div>
+  <div id="nogl" hidden><p>This game needs WebGL, which this browser has turned off.</p></div>
+</div>
+
+
+<section id="lobby" aria-label="Game lobby">
 <main>
   <header>
     <h1>Level Up</h1>
@@ -80,9 +141,13 @@
           <p>Dodge trains, jump barriers and roll under signs. Collect coins to buy skins, pets and emotes.</p>
           <div class="meta">
             <span class="pill">3D runner</span>
-            <span class="pill best" id="best-rail" hidden></span>
+            <span class="pill best" id="best-railrush" hidden></span>
           </div>
-          <a class="play" href="rail-rush.html">Play</a>
+          <div id="top-railrush" hidden>
+            <span class="top-title">Top runners</span>
+            <ol class="top"></ol>
+          </div>
+          <button class="play" type="button" data-game="railrush">Play</button>
         </div>
       </article>
     </div>
@@ -97,13 +162,44 @@
     </div>
   </section>
 </main>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="leaderboard.js"></script>
+<script src="games/rail-rush.js"></script>
 <script>
-  // Show each game's best score, saved by the game itself in this browser.
-  function read(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } }
-  for (const [id, key] of [['best-rail', 'railrush.best']]) {
-    const best = Number(read(key)) || 0;
-    if (best > 0) { const el = document.getElementById(id); el.textContent = 'Best ' + best; el.hidden = false; }
+// Lobby: shows the game cards and hands control to a game when Play is pressed.
+(() => {
+  const GAMES = { railrush: () => window.RailRush };
+  const lobby = document.getElementById('lobby');
+  const readBest = key => { try { return Number(JSON.parse(localStorage.getItem(key))) || 0; } catch { return 0; } };
+
+  function refresh() {
+    const best = readBest('railrush.best'), pill = document.getElementById('best-railrush');
+    pill.hidden = !best; pill.textContent = 'Best ' + best;
   }
+  window.Lobby = {
+    show() { for (const g of Object.values(GAMES)) g()?.close(); refresh(); lobby.hidden = false; lobby.scrollTop = 0; },
+    open(id) { lobby.hidden = true; GAMES[id]()?.open(); },
+  };
+  for (const btn of document.querySelectorAll('#lobby [data-game]')) btn.onclick = () => Lobby.open(btn.dataset.game);
+
+  // Top three on each game's card, live.
+  Leaderboard.watch('railrush', 3, rows => {
+    const box = document.getElementById('top-railrush'), list = box.querySelector('ol');
+    box.hidden = !rows || !rows.length;
+    if (box.hidden) return;
+    list.innerHTML = '';
+    rows.forEach((row, i) => {
+      const li = document.createElement('li'); if (row.me) li.className = 'me';
+      for (const [cls, text] of [['rank', i + 1], ['name', row.name || 'Mystery Runner'], ['pts', row.score]]) {
+        const span = document.createElement('span'); span.className = cls; span.textContent = text; li.appendChild(span);
+      }
+      list.appendChild(li);
+    });
+  });
+  refresh();
+})();
 </script>
 </body>
 </html>

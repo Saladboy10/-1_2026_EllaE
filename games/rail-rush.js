@@ -1,171 +1,4 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Rail Rush</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800&display=swap">
-<style>
-  /* Layout: full-screen 3D canvas; chunky sticker-style panels float over it. */
-  :root {
-    --sky: #8fd3ff;
-    --ink: #1b1530;
-    --paper: #ffffff;
-    --signal: #ffcf1a;
-    --spray: #ff4f7b;
-    --mist: #e9f1fb;
-    --display: "Bungee", "Arial Black", Impact, sans-serif;
-    --body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
-    color-scheme: light;
-  }
-  * { box-sizing: border-box; }
-  [hidden] { display: none !important; }
-  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--sky); color: var(--ink);
-    font-family: var(--body); font-weight: 600; -webkit-user-select: none; user-select: none; }
-  #app { position: relative; height: 100%; overflow: hidden; touch-action: none; }
-  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  button { font: inherit; color: inherit; cursor: pointer; }
-  button:focus-visible { outline: 3px solid var(--spray); outline-offset: 3px; }
-
-  .panel { position: absolute; background: var(--paper); border: 3px solid var(--ink); border-radius: 20px;
-    box-shadow: 0 6px 0 var(--ink); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-  .center { left: 50%; transform: translateX(-50%); width: min(420px, calc(100% - 32px)); }
-  #menu, #over, #paused { bottom: 24px; text-align: center; }
-
-  .logo { font-family: var(--display); font-size: clamp(2.4rem, 11vw, 3.6rem); line-height: .95; margin: 0;
-    color: var(--signal); -webkit-text-stroke: 2px var(--ink); text-shadow: 0 5px 0 var(--ink); text-wrap: balance; }
-  h2 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; color: var(--spray);
-    -webkit-text-stroke: 1.5px var(--ink); text-shadow: 0 4px 0 var(--ink); }
-  .stats { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
-  .stat { display: flex; flex-direction: column; align-items: center; }
-  .stat b { font-family: var(--display); font-weight: 400; font-size: 1.5rem; }
-  .stat span { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; opacity: .7; }
-  .row { display: flex; gap: 10px; }
-  .row > * { flex: 1; }
-
-  .btn { font-family: var(--display); font-size: 1.1rem; padding: 12px 16px; border: 3px solid var(--ink);
-    border-radius: 14px; background: var(--mist); box-shadow: 0 4px 0 var(--ink); transition: transform .06s; }
-  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
-  a.btn { text-decoration: none; color: var(--ink); text-align: center; }
-  .btn.primary { background: var(--signal); font-size: 1.4rem; }
-  .hint { font-size: .85rem; opacity: .75; margin: 0; }
-
-  #custom { right: 16px; top: 16px; bottom: 16px; width: 360px; }
-  #options { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-right: 4px; }
-  #custom header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  #custom h2 { font-size: 1.5rem; }
-  fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-  legend { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; padding: 0; margin-bottom: 6px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .swatch { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--ink); background: var(--c); padding: 0; }
-  .swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--ink); }
-  .chip { padding: 6px 12px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); font-weight: 800; font-size: .9rem; }
-  .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-  .chip.locked { background: var(--mist); }
-  .coin { display: inline-block; width: .9em; height: .9em; border-radius: 50%; background: var(--signal);
-    border: 2px solid var(--ink); vertical-align: -0.12em; }
-  .bank { font-family: var(--display); font-size: 1.1rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
-
-  #hud { position: absolute; inset: 0; pointer-events: none; padding: 14px 16px; display: flex;
-    justify-content: space-between; align-items: flex-start; font-family: var(--display); color: var(--paper);
-    text-shadow: 0 3px 0 var(--ink); -webkit-text-stroke: 1px var(--ink); font-variant-numeric: tabular-nums; }
-  #score { font-size: 2rem; line-height: 1; }
-  #hud .right { display: flex; gap: 10px; align-items: center; font-size: 1.6rem; }
-  .icon-btn { pointer-events: auto; width: 44px; height: 44px; border: 3px solid var(--ink); border-radius: 12px;
-    background: var(--paper); box-shadow: 0 3px 0 var(--ink); font-family: var(--body); font-weight: 800;
-    font-size: 1rem; text-shadow: none; -webkit-text-stroke: 0; color: var(--ink); }
-  #tip { position: absolute; left: 50%; top: 38%; transform: translateX(-50%); font-family: var(--display);
-    color: var(--paper); -webkit-text-stroke: 1px var(--ink); text-shadow: 0 3px 0 var(--ink); text-align: center;
-    font-size: 1.2rem; pointer-events: none; transition: opacity .6s; width: calc(100% - 32px); }
-  .emote-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
-  .name-field { display: flex; flex-direction: column; gap: 6px; }
-  .name-field span { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
-  #runnerName { font: inherit; font-weight: 800; font-size: 1.1rem; padding: 10px 12px; border: 3px solid var(--ink);
-    border-radius: 12px; background: var(--mist); color: var(--ink); width: 100%; -webkit-user-select: text; user-select: text; }
-  #runnerName:focus-visible { outline: 3px solid var(--spray); outline-offset: 2px; }
-  #nameTag { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); background: var(--ink); color: var(--paper);
-    padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: 1rem; white-space: nowrap; pointer-events: none;
-    box-shadow: 0 3px 0 rgba(0,0,0,.25); }
-  #toast { position: absolute; left: 50%; top: 20px; transform: translateX(-50%); background: var(--ink); color: var(--paper);
-    padding: 10px 16px; border-radius: 12px; font-weight: 800; pointer-events: none; transition: opacity .3s; opacity: 0;
-    max-width: calc(100% - 32px); text-align: center; z-index: 5; }
-  #toast.show { opacity: 1; }
-  #nogl { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; text-align: center; }
-
-  @media (max-width: 760px) {
-    #custom { left: 16px; right: 16px; top: 44%; width: auto; padding: 16px; }
-    .swatch { width: 30px; height: 30px; }
-  }
-</style>
-</head>
-<body>
-<div id="app">
-  <canvas id="c"></canvas>
-
-  <div id="hud" hidden>
-    <div><div id="score">0</div></div>
-    <div class="right"><span><span class="coin"></span> <span id="coins">0</span></span>
-      <button class="icon-btn" id="pauseBtn" aria-label="Pause">II</button></div>
-  </div>
-  <div id="tip" hidden>Swipe or use arrow keys<br>← → move · ↑ jump · ↓ roll</div>
-
-  <section id="menu" class="panel center">
-    <h1 class="logo">Rail Rush</h1>
-    <div class="stats">
-      <div class="stat"><b id="menuBest">0</b><span>Best</span></div>
-      <div class="stat"><b id="menuBank">0</b><span>Coins</span></div>
-    </div>
-    <div class="emote-bar" id="menuEmotes" aria-label="Emotes"></div>
-    <button class="btn primary" id="playBtn">Run!</button>
-    <button class="btn" id="customBtn">Customize avatar</button>
-    <a class="btn" id="lobbyLink" href="index.html">Back to lobby</a>
-  </section>
-
-  <section id="custom" class="panel" hidden>
-    <header>
-      <h2>Your runner</h2>
-      <span class="bank"><span class="coin"></span> <span id="customBank">0</span></span>
-    </header>
-    <label class="name-field" for="runnerName"><span>Name</span>
-      <input id="runnerName" type="text" maxlength="16" placeholder="Type your name" autocomplete="off" spellcheck="false" enterkeyhint="done">
-      <small class="hint">Your name stays the same whatever outfit you wear.</small></label>
-    <div id="options"></div>
-    <div class="row">
-      <button class="btn" id="randomBtn">Surprise me</button>
-      <button class="btn primary" id="doneBtn">Done</button>
-    </div>
-  </section>
-
-  <section id="over" class="panel center" hidden>
-    <h2>Crashed!</h2>
-    <div class="stats">
-      <div class="stat"><b id="overScore">0</b><span>Score</span></div>
-      <div class="stat"><b id="overCoins">0</b><span>Coins</span></div>
-      <div class="stat"><b id="overBest">0</b><span>Best</span></div>
-    </div>
-    <p class="hint" id="overNote"></p>
-    <button class="btn primary" id="againBtn">Run again</button>
-    <div class="row">
-      <button class="btn" id="overCustomBtn">Avatar</button>
-      <button class="btn" id="overMenuBtn">Menu</button>
-    </div>
-  </section>
-
-  <section id="paused" class="panel center" hidden>
-    <h2>Paused</h2>
-    <button class="btn primary" id="resumeBtn">Keep running</button>
-    <button class="btn" id="quitBtn">Quit to menu</button>
-  </section>
-
-  <div id="nameTag" hidden></div>
-  <div id="toast" role="status"></div>
-  <div id="nogl" hidden><p>This game needs WebGL, which this browser has turned off.</p></div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
+// Rail Rush: a 3D endless runner. Loaded by index.html after three.js and leaderboard.js.
 const $ = s => document.querySelector(s);
 const store = {
   get(k, d) { try { const v = localStorage.getItem('railrush.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
@@ -717,7 +550,42 @@ function crash() {
   $('#overNote').textContent = newBest ? `New best score${who}!` : `Nice run${who}! You have ${bank} coins to spend on your avatar.`;
   $('#tip').hidden = true;
   setTimeout(() => { if (state === 'over') show('#over'); }, 900);
+  submitScore(score);
 }
+
+// ---------- Leaderboard ----------
+let boardRows = null;
+const outfitLabel = () => (OPTIONS.outfit.values.find(v => v[0] === avatarCfg.outfit && v[0] !== 'custom') || [])[1] || '';
+function setBoardStatus(text) { $('#boardStatus').textContent = text; }
+function submitScore(score) {
+  setBoardStatus(score > 0 ? 'Saving your score…' : '');
+  if (score <= 0) return;
+  Leaderboard.submit('railrush', { name: runnerName || 'Mystery Runner', score, outfit: outfitLabel() }).then(r => {
+    const nameHint = runnerName ? '' : ' Add your name in Avatar so friends know it’s you.';
+    if (r.ok) setBoardStatus((r.improved ? 'Your new best is on the leaderboard!' : `Your best is still ${r.best}.`) + nameHint);
+    else if (r.reason === 'readonly') setBoardStatus('Only players with Contributor access can add scores. Ask the owner to share it with you as a Contributor.');
+    else if (r.reason === 'offline') setBoardStatus('');
+    else setBoardStatus('Your score couldn’t be saved this time. Try another run.');
+  });
+}
+function boardRow(row, rank) {
+  const li = document.createElement('li'); if (row.me) li.className = 'me';
+  for (const [cls, text] of [['rank', rank], ['name', row.name || 'Mystery Runner'], ['pts', row.score]]) {
+    const span = document.createElement('span'); span.className = cls; span.textContent = text; li.appendChild(span);
+  }
+  return li;
+}
+function renderBoard() {
+  const box = $('#overBoard'), list = $('#boardList');
+  box.hidden = !boardRows;
+  if (!boardRows) return;
+  list.innerHTML = '';
+  if (!boardRows.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'No scores yet. Be the first!'; list.appendChild(li); return; }
+  boardRows.slice(0, 5).forEach((row, i) => list.appendChild(boardRow(row, i + 1)));
+  const mine = boardRows.findIndex(r => r.me);
+  if (mine >= 5) list.appendChild(boardRow(boardRows[mine], mine + 1));
+}
+Leaderboard.watch('railrush', 10, rows => { boardRows = rows; renderBoard(); });
 function pause() { if (state === 'play') { state = 'pause'; show('#paused'); } }
 function resume() { if (state === 'pause') { state = 'play'; show(null); } }
 
@@ -741,6 +609,7 @@ function roll() {
   player.roll = ROLL_TIME; sfx('roll');
 }
 window.addEventListener('keydown', e => {
+  if (!active) return;
   if (e.target === nameInput) { if (e.key === 'Enter') nameInput.blur(); return; }
   const k = e.key.toLowerCase();
   if (['arrowleft', 'a'].includes(k)) move(-1);
@@ -981,7 +850,7 @@ function placeNameTag() {
   avatar.head.getWorldPosition(tagPos);
   tagPos.y += 0.85 + avatar.tall;
   tagPos.project(camera);
-  const show = runnerName && state !== 'pause' && tagPos.z < 1;
+  const show = runnerName && state !== 'pause' && $('#over').hidden && tagPos.z < 1;
   nameTag.hidden = !show;
   if (!show) return;
   nameTag.textContent = runnerName;
@@ -997,15 +866,22 @@ window.addEventListener('resize', resize);
 resize();
 
 let last = performance.now();
+// The lobby opens and closes the game; while closed nothing updates or renders.
+let active = false;
+window.RailRush = {
+  open() { active = true; last = performance.now(); toMenu(); },
+  close() { active = false; nameTag.hidden = true; },
+};
+$('#lobbyLink').onclick = () => window.Lobby && Lobby.show();
+
 function loop(t) {
   const dt = Math.min((t - last) / 1000, 0.05); last = t;
-  update(dt);
-  placeNameTag();
-  renderer.render(scene, camera);
+  if (active) {
+    update(dt);
+    placeNameTag();
+    renderer.render(scene, camera);
+  }
   requestAnimationFrame(loop);
 }
 toMenu();
 requestAnimationFrame(loop);
-</script>
-</body>
-</html>

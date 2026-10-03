@@ -1,19 +1,27 @@
 # Games
 
 Open `index.html` in a web browser for the **Level Up** game lobby, then pick a game. No install needed.
-Each game has a button to get back to the lobby.
+
+## How it's organized
+- `index.html` is the lobby. Every game lives inside this one page; the lobby covers the screen until you press Play.
+- `games/` holds each game's own code (`rail-rush.js`, `rail-rush.css`).
+- `leaderboard.js` runs the shared leaderboards. Each game has its own board with every player's best score.
+  Boards work in the published game; opened as a plain file, the games still play but the board stays hidden.
+- `assets/` holds the pictures on the lobby cards.
 
 ## Adding a new game
-1. Put the game in its own file, like `my-game.html`, with a link back to `index.html`.
-2. In `index.html`, swap one of the "Coming soon" slots for a game card that links to it, with a picture in `assets/`.
+1. Put its code in `games/` and load it from `index.html`. Give it `open()` and `close()` like `window.RailRush`, and a button that calls `Lobby.show()`.
+2. Swap one of the "Coming soon" slots for a game card with a `data-game` Play button and a picture in `assets/`.
+3. For a leaderboard, call `Leaderboard.submit('<game>', { name, score })` when a game ends and `Leaderboard.watch('<game>', 10, rows => ...)` to show it.
 
-## Rail Rush (`rail-rush.html`)
+## Rail Rush
 A 3D endless runner. Dodge trains and barriers across three tracks, grab coins, and see how far you get.
 
 - **Move:** ← → (or A / D), or swipe left/right
 - **Jump:** ↑ (or W / Space), or swipe up. Jump over red-and-white barriers.
 - **Roll:** ↓ (or S), or swipe down. Roll under yellow-and-black barriers.
 - **Pause:** P or Esc
+- **Leaderboard:** when a run ends, your best score is saved under your runner's name and the top runners show on the crash screen and the lobby card.
 
 **Customize avatar** lets you type your runner's name (it floats above them and shows on the score screen) and pick a ready-made outfit or build your own look:
 
