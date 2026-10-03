@@ -12,6 +12,8 @@ const OPTIONS = {
   skin:      { label: 'Skin', type: 'color', values: ['#ffdbc2', '#f1c19b', '#d9a07a', '#b97850', '#8d5534', '#5c3720'] },
   hair:      { label: 'Hair', type: 'style', values: [['none', 'None'], ['short', 'Short'], ['spiky', 'Spiky'], ['long', 'Long'], ['bun', 'Bun'], ['mohawk', 'Mohawk']] },
   hairColor: { label: 'Hair color', type: 'color', values: ['#1c1410', '#5a3a22', '#a8642c', '#e8c46a', '#e2e2e2', '#ff5fa2', '#3fa9ff', '#5cd65c'] },
+  expression: { label: 'Expression', type: 'style', values: [['normal', 'Normal'], ['happy', 'Happy'], ['angry', 'Angry'], ['sad', 'Sad'], ['surprised', 'Surprised'], ['wink', 'Wink'], ['cool', 'Cool']] },
+  mouth:     { label: 'Mouth', type: 'style', values: [['smile', 'Smile'], ['grin', 'Big grin'], ['teeth', 'Gritted teeth'], ['smirk', 'Smirk'], ['shout', 'Shout'], ['o', 'Surprised'], ['frown', 'Frown'], ['tongue', 'Tongue out'], ['line', 'Straight']] },
   eyes:      { label: 'Eyes', type: 'color', values: ['#7a3b2e', '#c2264f', '#3a6fd8', '#2f9e5a', '#8a5cff', '#e0b020', '#5a3a22', '#1c1410'] },
   shirt:     { label: 'Top', type: 'color', values: CLOTHES },
   pants:     { label: 'Pants', type: 'color', values: CLOTHES },
@@ -21,7 +23,7 @@ const OPTIONS = {
   extra:     { label: 'Extra', type: 'style', values: [['none', 'None'], ['glasses', 'Glasses'], ['backpack', 'Backpack'], ['cape', 'Cape', 100]] },
   pet:       { label: 'Pet', type: 'style', values: [['none', 'None'], ['pup', 'Milo', 50], ['fox', 'Tails', 50]] },
 };
-const DEFAULT_AVATAR = { outfit: 'custom', pet: 'none', eyes: '#7a3b2e', skin: '#f1c19b', hair: 'short', hairColor: '#5a3a22', shirt: '#ff4f7b', pants: '#2f80ff',
+const DEFAULT_AVATAR = { outfit: 'custom', pet: 'none', expression: 'normal', mouth: 'smile', eyes: '#7a3b2e', skin: '#f1c19b', hair: 'short', hairColor: '#5a3a22', shirt: '#ff4f7b', pants: '#2f80ff',
   shoes: '#ffffff', hat: 'cap', hatColor: '#ffcf1a', extra: 'backpack' };
 
 let runnerName = store.get('name', '');
@@ -258,16 +260,96 @@ function ball(r, color, x, y, z, parent, sx = 1, sy = 1, sz = 1) {
   const m = new THREE.Mesh(geo('SphereGeometry', r, 20, 14), mat(color));
   m.position.set(x, y, z); m.scale.set(sx, sy, sz); parent.add(m); return m;
 }
+// ---------- Anime head, face and hair ----------
+// The head is round with a pointed anime chin: a lathe of this side profile [radius, height].
+const HEAD_PROFILE = [[0, 0.02], [0.07, 0.03], [0.15, 0.08], [0.21, 0.15], [0.25, 0.23], [0.27, 0.31], [0.275, 0.38],
+  [0.265, 0.45], [0.235, 0.51], [0.18, 0.555], [0.1, 0.58], [0, 0.59]];
+function headR(y) {
+  const P = HEAD_PROFILE;
+  if (y <= P[0][1]) return P[0][0];
+  for (let i = 1; i < P.length; i++) if (y <= P[i][1]) { const [r0, y0] = P[i - 1], [r1, y1] = P[i]; return r0 + (r1 - r0) * (y - y0) / (y1 - y0); }
+  return 0;
+}
+const headGeo = () => geoCache.head || (geoCache.head = new THREE.LatheGeometry(HEAD_PROFILE.map(([r, y]) => new THREE.Vector2(r, y)), 28));
+// A curved line: up=true is ∩, up=false is ∪.
+function arc(r, tube, color, x, y, z, parent, up, tilt = 0) {
+  const m = new THREE.Mesh(geo('TorusGeometry', r, tube, 6, 18, Math.PI), mat(color));
+  m.position.set(x, y, z); m.rotation.z = (up ? 0 : Math.PI) + tilt; m.userData.noLine = true; parent.add(m); return m;
+}
+const BROWS = { normal: [0.455, 0.24], happy: [0.475, -0.1], angry: [0.43, 0.55], sad: [0.465, -0.38], surprised: [0.5, -0.08], wink: [0.455, 0.24], cool: [0.45, 0] };
+const LIDS = { angry: [0.37, 0.38], sad: [0.37, -0.32], cool: [0.35, 0] };
+function animeFace(head, c, costume, skin) {
+  const iris = (costume && costume.eyes) || c.eyes || '#7a3b2e', brow = (costume && costume.brows) || c.hairColor || '#1b1530';
+  const ex = c.expression || 'normal', mouth = c.mouth || 'smile', ink = '#120d18', lip = '#7a1f2c';
+  const irisDark = '#' + new THREE.Color(iris).multiplyScalar(0.5).getHexString();
+  for (const s of [-1, 1]) {
+    const x = s * 0.12;
+    if (ex === 'happy' || (ex === 'wink' && s === 1)) {
+      arc(0.058, 0.015, ink, x, 0.3, -0.285, head, true);
+    } else {
+      const wide = ex === 'surprised' ? 1.15 : 1, pupil = ex === 'surprised' ? 0.65 : 1;
+      ball(0.08 * wide, '#ffffff', x, 0.3, -0.25, head, 1, 1.35, 0.35);
+      ball(0.056 * pupil, iris, x, 0.29, -0.272, head, 0.9, 1.25, 0.3).userData.noLine = true;
+      ball(0.05 * pupil, irisDark, x, 0.315, -0.276, head, 0.95, 0.6, 0.3).userData.noLine = true;
+      ball(0.028 * pupil, ink, x, 0.29, -0.284, head, 0.9, 1.2, 0.3);
+      ball(0.02, '#ffffff', x + s * 0.016, 0.325, -0.296, head, 1, 1, 0.4);
+      ball(0.01, '#ffffff', x - s * 0.02, 0.262, -0.296, head, 1, 1, 0.4);
+      box(0.19, 0.036, 0.03, ink, s * 0.125, 0.392, -0.266, head).rotation.z = -s * 0.12;
+      box(0.06, 0.026, 0.03, ink, s * 0.215, 0.4, -0.25, head).rotation.z = s * 0.55;
+      if (LIDS[ex]) { const [ly, lr] = LIDS[ex]; const lid = box(0.2, 0.08, 0.035, skin, x, ly, -0.274, head); lid.rotation.z = s * lr; lid.userData.noLine = true; }
+    }
+    const [by, br] = BROWS[ex] || BROWS.normal;
+    box(0.15, 0.03, 0.03, brow, x, by, -0.272, head).rotation.z = s * br;
+    ball(0.06, skin, s * 0.28, 0.27, 0.02, head, 0.5, 1, 0.8);
+  }
+  ball(0.022, skin, 0, 0.205, -0.28, head, 0.8, 1.2, 0.9).userData.noLine = true;
+  const mouthY = 0.125, mz = -0.276;
+  if (mouth === 'smile') arc(0.05, 0.011, lip, 0, mouthY + 0.01, mz, head, false);
+  else if (mouth === 'frown') arc(0.045, 0.011, lip, 0, mouthY - 0.02, mz, head, true);
+  else if (mouth === 'smirk') arc(0.042, 0.011, lip, 0.025, mouthY + 0.01, mz, head, false, 0.4);
+  else if (mouth === 'tongue') { arc(0.05, 0.011, lip, 0, mouthY + 0.01, mz, head, false); ball(0.024, '#ff7b8a', 0.015, mouthY - 0.035, mz + 0.004, head, 1, 1.3, 0.4); }
+  else if (mouth === 'line') box(0.11, 0.016, 0.02, lip, 0, mouthY, mz, head);
+  else if (mouth === 'o') ball(0.028, lip, 0, mouthY, mz + 0.004, head, 1, 1.3, 0.3);
+  else if (mouth === 'grin' || mouth === 'shout') {
+    const m = new THREE.Mesh(geo('CircleGeometry', mouth === 'shout' ? 0.06 : 0.07, 18, Math.PI, Math.PI), mat(lip));
+    m.rotation.y = Math.PI; m.position.set(0, mouthY + 0.025, mz - 0.003); m.userData.noLine = true; head.add(m);
+    if (mouth === 'shout') m.scale.y = 1.6;
+    box(mouth === 'shout' ? 0.09 : 0.11, 0.022, 0.012, '#ffffff', 0, mouthY + 0.013, mz - 0.006, head).userData.noLine = true;
+    if (mouth === 'grin') ball(0.026, '#ff7b8a', 0, mouthY - 0.02, mz - 0.002, head, 1.3, 0.7, 0.3).userData.noLine = true;
+  } else if (mouth === 'teeth') {
+    box(0.15, 0.055, 0.012, '#ffffff', 0, mouthY, mz - 0.004, head);
+    for (const tx of [-0.045, 0, 0.045]) box(0.006, 0.05, 0.014, ink, tx, mouthY, mz - 0.008, head).userData.noLine = true;
+    box(0.14, 0.005, 0.014, ink, 0, mouthY, mz - 0.008, head).userData.noLine = true;
+  }
+}
+// One lock of anime hair: a cone growing from `from` toward `dir`.
+function strand(head, color, from, dir, r, len) {
+  dir = dir.clone().normalize();
+  const m = new THREE.Mesh(geo('ConeGeometry', r, len, 10), mat(color));
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+  m.position.copy(from).addScaledVector(dir, len / 2); m.userData.free = true; head.add(m); return m;
+}
+// Anime hair: a cap with swoopy bangs and side locks; long adds flowing strands down the back.
+function animeHair(head, color, style) {
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  ball(0.29, color, 0, 0.43, 0.07, head);
+  for (const [x, tilt] of [[-0.17, -0.35], [-0.08, -0.12], [0.02, 0.1], [0.12, 0.3], [0.2, 0.45]]) strand(head, color, V(x, 0.56, -0.2), V(tilt, -1, -0.4), 0.07, 0.24);
+  for (const s of [-1, 1]) strand(head, color, V(s * 0.26, 0.45, -0.05), V(s * 0.15, -1, -0.1), 0.07, style === 'long' ? 0.5 : 0.3);
+  if (style === 'long') for (let i = 0; i < 6; i++) { const x = -0.22 + i * 0.088; strand(head, color, V(x, 0.4, 0.2), V(x * 0.4, -1, 0.15), 0.1, 0.78); }
+  if (style === 'short') for (const x of [-0.15, 0, 0.15]) strand(head, color, V(x, 0.3, 0.24), V(x * 0.5, -1, 0.4), 0.09, 0.2);
+  if (style === 'bun') ball(0.16, color, 0, 0.72, 0.16, head);
+}
+
 // Big anime spikes bursting out of a cap of hair, with bangs over the forehead.
 function animeSpikes(head, color) {
-  ball(0.31, color, 0, 0.4, 0.03, head, 1, 0.95, 1);
+  ball(0.29, color, 0, 0.43, 0.07, head);
   const up = new THREE.Vector3(0, 1, 0), center = new THREE.Vector3(0, 0.36, 0.04);
   const spike = (dir, r, len, from) => {
     dir.normalize();
     const m = new THREE.Mesh(geo('ConeGeometry', r, len, 10), mat(color));
     m.quaternion.setFromUnitVectors(up, dir);
     m.position.copy(from || center.clone().addScaledVector(dir, 0.27)).addScaledVector(dir, len / 2);
-    head.add(m);
+    m.userData.free = true; head.add(m);
   };
   spike(new THREE.Vector3(0, 1, 0.1), 0.12, 0.42);
   for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + 0.3; spike(new THREE.Vector3(Math.sin(a) * 0.75, 0.75, Math.cos(a) * 0.75), 0.12, 0.42); }
@@ -276,7 +358,7 @@ function animeSpikes(head, color) {
     if (Math.cos(a) < -0.5) continue; // keep the face clear
     spike(new THREE.Vector3(Math.sin(a), 0.25, Math.cos(a)), 0.11, 0.36);
   }
-  for (const x of [-0.17, -0.06, 0.06, 0.17]) spike(new THREE.Vector3(x * 1.5, -0.9, -0.45), 0.065, 0.2, new THREE.Vector3(x, 0.6, -0.22));
+  for (const x of [-0.17, -0.06, 0.06, 0.17]) spike(new THREE.Vector3(x * 1.5, -0.9, -0.35), 0.065, 0.2, new THREE.Vector3(x, 0.56, -0.21));
 }
 
 // A rounded tube from y=top down to y=bottom inside its parent.
@@ -453,7 +535,7 @@ const outlineMat = new THREE.ShaderMaterial({
 });
 function addOutlines(root) {
   const parts = [];
-  root.traverse(o => { if (o.isMesh && !o.userData.outline) parts.push(o); });
+  root.traverse(o => { if (o.isMesh && !o.userData.outline && !o.userData.noLine) parts.push(o); });
   for (const part of parts) {
     if (!part.geometry.boundingSphere) part.geometry.computeBoundingSphere();
     const size = part.geometry.boundingSphere.radius * Math.max(part.scale.x, part.scale.y, part.scale.z);
@@ -495,22 +577,8 @@ function buildRunner(c) {
   // Neck joins the head to the shoulders; the head is a little smaller than the old cartoon one.
   tube(0.09 * t + 0.02, 0.1 * t + 0.03, 0.2, P.skin, 0, Y(1.62), 0, body);
   const head = new THREE.Group(); head.position.y = Y(1.64); head.scale.setScalar(0.84); body.add(head);
-  box(0.54, 0.56, 0.54, P.skin, 0, 0.29, 0, head);
-  if (!costume || costume.face !== false) {
-    // Anime face: big shiny eyes with lashes, sharp brows, a small nose and mouth.
-    const iris = (costume && costume.eyes) || c.eyes || '#7a3b2e', brow = (costume && costume.brows) || c.hairColor || '#1b1530';
-    for (const s of [-1, 1]) {
-      ball(0.078, '#ffffff', s * 0.12, 0.3, -0.25, head, 1, 1.3, 0.35);
-      ball(0.054, iris, s * 0.12, 0.29, -0.272, head, 0.9, 1.25, 0.3);
-      ball(0.03, '#120d18', s * 0.12, 0.29, -0.285, head, 0.9, 1.2, 0.3);
-      ball(0.018, '#ffffff', s * 0.135, 0.32, -0.295, head, 1, 1, 0.4);
-      box(0.18, 0.032, 0.03, '#120d18', s * 0.125, 0.39, -0.268, head).rotation.z = -s * 0.12;
-      box(0.15, 0.03, 0.03, brow, s * 0.12, 0.455, -0.262, head).rotation.z = s * 0.24;
-      ball(0.06, P.skin, s * 0.28, 0.27, 0.02, head, 0.5, 1, 0.8);
-    }
-    box(0.03, 0.07, 0.04, P.skin, 0, 0.2, -0.285, head);
-    box(0.13, 0.018, 0.02, '#8a2f3a', 0, 0.11, -0.274, head);
-  }
+  const skull = new THREE.Mesh(headGeo(), mat(P.skin)); skull.userData.skull = true; head.add(skull);
+  if (!costume || costume.face !== false) animeFace(head, c, costume, P.skin);
 
   let cape = null;
   if (costume) {
@@ -521,18 +589,7 @@ function buildRunner(c) {
     }
   } else {
     const hc = c.hairColor;
-    if (c.hair === 'short' || c.hair === 'long' || c.hair === 'bun') {
-      box(0.58, 0.14, 0.58, hc, 0, 0.61, 0, head);
-      box(0.58, 0.34, 0.1, hc, 0, 0.43, 0.25, head);
-      box(0.58, 0.08, 0.12, hc, 0, 0.52, -0.25, head);
-    }
-    if (c.hair === 'long') {
-      box(0.6, 0.75, 0.12, hc, 0, 0.2, 0.28, head);
-      for (const s of [-1, 1]) box(0.07, 0.5, 0.48, hc, s * 0.3, 0.33, 0.04, head);
-    }
-    if (c.hair === 'bun') {
-      const bun = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), mat(hc)); bun.position.set(0, 0.74, 0.16); head.add(bun);
-    }
+    if (c.hair === 'short' || c.hair === 'long' || c.hair === 'bun') animeHair(head, hc, c.hair);
     const hatted = c.hat !== 'none' && c.hat !== 'headphones';
     if (c.hair === 'spiky' || (c.hair === 'mohawk' && hatted)) box(0.56, 0.08, 0.56, hc, 0, 0.58, 0, head);
     if (c.hair === 'spiky' && !hatted) animeSpikes(head, hc);
@@ -570,6 +627,13 @@ function buildRunner(c) {
       cape = new THREE.Group(); cape.position.set(0, Y(1.52), 0.24); body.add(cape);
       box(0.7, 1.0, 0.05, '#d62f4f', 0, -0.5, 0, cape);
     }
+  }
+  // Pieces placed on the front of the head sit on its curved surface.
+  for (const part of head.children) {
+    const { x, y, z } = part.position;
+    if (part.userData.skull || part.userData.free || z > -0.15) continue;
+    const r = headR(y);
+    part.position.z = z + 0.27 - Math.sqrt(Math.max(0, r * r - x * x));
   }
   const pet = buildPet(c.pet);
   if (pet) root.add(pet.group);
@@ -849,7 +913,8 @@ function toast(msg) {
 function renderCustom() {
   const wrap = $('#options'); wrap.innerHTML = '';
   for (const [key, opt] of Object.entries(OPTIONS)) {
-    if (avatarCfg.outfit !== 'custom' && key !== 'outfit' && key !== 'pet') {
+    const faceRow = (key === 'expression' || key === 'mouth') && !(COSTUMES[avatarCfg.outfit] && COSTUMES[avatarCfg.outfit].face === false);
+    if (avatarCfg.outfit !== 'custom' && key !== 'outfit' && key !== 'pet' && !faceRow) {
       if (key === 'skin') { const note = document.createElement('p'); note.className = 'hint'; note.textContent = 'This outfit sets your look. Pick “My own” to choose hair, clothes and hats yourself.'; wrap.appendChild(note); }
       continue;
     }
