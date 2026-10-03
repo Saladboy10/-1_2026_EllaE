@@ -2,8 +2,8 @@
 // Each game keeps its own board: one entry per player holding their best score.
 // Secret codes can only be claimed by a set number of players; each player's claimed
 // codes live in claims/<player id>.
-// This only works in the published game (it needs the shared database); opened as a
-// plain file, every call quietly reports that it is unavailable.
+// This only works in the Claude artifact version (it needs the shared database); opened as a
+// plain file or hosted elsewhere (like Vercel), every call quietly reports that it is unavailable.
 const Leaderboard = (() => {
   let ready = null, myId = null, viewer = null;
 

@@ -945,7 +945,7 @@ async function redeemCode() {
       'already': 'You already used that code.',
       'used-up': `Too late! ${max} players already used this code.`,
       'busy': 'Lots of people are trying this code. Try again in a moment.',
-      'readonly': 'Only players with Contributor access can use codes. Ask the owner to share the game with you as a Contributor.',
+      'readonly': 'You need more access to use codes. Ask the owner to give you access.',
       'error': 'Your code couldn’t be checked. Try again.',
     }[claim.reason];
     if (why) { codeMessage(why, false); if (claim.reason === 'already') { owned.push('code:' + id); store.set('owned', owned); } return; }
@@ -976,7 +976,7 @@ function submitScore(score) {
   Leaderboard.submit('railrush', { name: runnerName || 'Mystery Runner', score, outfit: outfitLabel() }).then(r => {
     const nameHint = runnerName ? '' : ' Add your name in Avatar so friends know it’s you.';
     if (r.ok) setBoardStatus((r.improved ? 'Your new best is on the leaderboard!' : `Your best is still ${r.best}.`) + nameHint);
-    else if (r.reason === 'readonly') setBoardStatus('Only players with Contributor access can add scores. Ask the owner to share it with you as a Contributor.');
+    else if (r.reason === 'readonly') setBoardStatus('You need more access to add scores. Ask the owner to give you access.');
     else if (r.reason === 'offline') setBoardStatus('');
     else setBoardStatus('Your score couldn’t be saved this time. Try another run.');
   });

@@ -5,6 +5,18 @@ Open `index.html` in a web browser for the **Level Up** game lobby, then pick a 
 ## Skin requests
 Players press **Request a skin** in the top corner of the lobby to send an idea, with an optional photo. The owner sees them under **Inbox** (only the owner gets that button).
 
+## Putting it online with Vercel
+Vercel can host the game for free at an address like `levelup-edge.vercel.app`. No build step is needed:
+it's a plain website. On Vercel the games play fully, but the leaderboard, the secret-code player limit and
+skin requests don't work (they need the Claude version's shared storage); codes still work once per player.
+
+1. Sign up at vercel.com with a parent or teacher, using **Continue with GitHub** (the account that owns this repo).
+2. Choose **Add New → Project**, pick this repository and press **Import**.
+3. Leave the settings as they are (Framework: **Other**, no build command) and press **Deploy**.
+4. The work is on the branch `claude/game-development-oysmds`. Either merge it into `main` first, or in the
+   project's **Settings → Environments → Production**, set the production branch to `claude/game-development-oysmds`.
+5. To choose the address, open **Settings → Domains** and edit the `.vercel.app` name (for example `levelup-edge`).
+
 ## How it's organized
 - `index.html` is the lobby. Every game lives inside this one page; the lobby covers the screen until you press Play.
 - `games/` holds each game's own code (`rail-rush.js`, `rail-rush.css`).

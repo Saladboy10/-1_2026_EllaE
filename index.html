@@ -291,7 +291,7 @@
     const box = document.getElementById('top-railrush'), list = box.querySelector('ol'), note = box.querySelector('.leaders-note');
     list.innerHTML = '';
     note.hidden = !!(rows && rows.length);
-    note.textContent = !rows ? 'The leaderboard shows up in the published game.' : 'No scores yet. Play a run to get on the board!';
+    note.textContent = !rows ? 'The leaderboard only works in the Claude version of Level Up.' : 'No scores yet. Play a run to get on the board!';
     box.querySelector('.leaders-head').hidden = !(rows && rows.length);
     if (!rows) return;
     rows.forEach((row, i) => {
@@ -334,7 +334,7 @@
     const r = await Leaderboard.sendRequest({ name, text, photo: photoData });
     $id('reqSend').disabled = false;
     if (r.ok) { reqMsg('Request sent! Thanks for the idea.', false); $id('reqText').value = ''; $id('reqPhoto').value = ''; photoData = ''; $id('reqPreview').hidden = true; }
-    else reqMsg({ offline: 'Requests can only be sent from the published game.', readonly: 'Only players with Contributor access can send requests. Ask the owner to share the game with you as a Contributor.' }[r.reason] || 'Your request couldn’t be sent. Try again.', true);
+    else reqMsg({ offline: 'Requests can only be sent from the Claude version of Level Up.', readonly: 'You need more access to send requests. Ask the owner to give you access.' }[r.reason] || 'Your request couldn’t be sent. Try again.', true);
   };
   Leaderboard.isOwner().then(owner => { $id('inboxBtn').hidden = !owner; });
   $id('inboxBtn').onclick = async () => {
