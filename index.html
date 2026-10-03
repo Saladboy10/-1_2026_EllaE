@@ -78,6 +78,14 @@
   #tip { position: absolute; left: 50%; top: 38%; transform: translateX(-50%); font-family: var(--display);
     color: var(--paper); -webkit-text-stroke: 1px var(--ink); text-shadow: 0 3px 0 var(--ink); text-align: center;
     font-size: 1.2rem; pointer-events: none; transition: opacity .6s; width: calc(100% - 32px); }
+  .name-field { display: flex; flex-direction: column; gap: 6px; }
+  .name-field span { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+  #runnerName { font: inherit; font-weight: 800; font-size: 1.1rem; padding: 10px 12px; border: 3px solid var(--ink);
+    border-radius: 12px; background: var(--mist); color: var(--ink); width: 100%; -webkit-user-select: text; user-select: text; }
+  #runnerName:focus-visible { outline: 3px solid var(--spray); outline-offset: 2px; }
+  #nameTag { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); background: var(--ink); color: var(--paper);
+    padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: 1rem; white-space: nowrap; pointer-events: none;
+    box-shadow: 0 3px 0 rgba(0,0,0,.25); }
   #toast { position: absolute; left: 50%; top: 20px; transform: translateX(-50%); background: var(--ink); color: var(--paper);
     padding: 10px 16px; border-radius: 12px; font-weight: 800; pointer-events: none; transition: opacity .3s; opacity: 0;
     max-width: calc(100% - 32px); text-align: center; z-index: 5; }
@@ -116,6 +124,8 @@
       <h2>Your runner</h2>
       <span class="bank"><span class="coin"></span> <span id="customBank">0</span></span>
     </header>
+    <label class="name-field" for="runnerName"><span>Name</span>
+      <input id="runnerName" type="text" maxlength="16" placeholder="Type your name" autocomplete="off" spellcheck="false" enterkeyhint="done"></label>
     <div id="options"></div>
     <div class="row">
       <button class="btn" id="randomBtn">Surprise me</button>
@@ -144,6 +154,7 @@
     <button class="btn" id="quitBtn">Quit to menu</button>
   </section>
 
+  <div id="nameTag" hidden></div>
   <div id="toast" role="status"></div>
   <div id="nogl" hidden><p>This game needs WebGL, which this browser has turned off.</p></div>
 </div>
@@ -174,6 +185,7 @@ const OPTIONS = {
 const DEFAULT_AVATAR = { outfit: 'custom', pet: 'none', skin: '#f1c19b', hair: 'short', hairColor: '#5a3a22', shirt: '#ff4f7b', pants: '#2f80ff',
   shoes: '#ffffff', hat: 'cap', hatColor: '#ffcf1a', extra: 'backpack' };
 
+let runnerName = store.get('name', '');
 let avatarCfg = { ...DEFAULT_AVATAR, ...store.get('avatar', {}) };
 let owned = store.get('owned', []);
 let bank = store.get('bank', 0);
@@ -196,11 +208,36 @@ scene.add(new THREE.HemisphereLight('#ffffff', '#6a7a5a', 0.85));
 const sun = new THREE.DirectionalLight('#ffffff', 0.75); sun.position.set(6, 12, 4); scene.add(sun);
 
 const matCache = {}, geoCache = {};
+// While roundK > 0 (building a character), boxes come out with soft rounded edges and smooth shading.
+let roundK = 0;
 const mat = (c, opts) => {
+  if (roundK && !opts) return matCache['soft' + c] || (matCache['soft' + c] = new THREE.MeshPhongMaterial({ color: c, shininess: 18, specular: '#2a2a2a' }));
   const key = c + (opts ? JSON.stringify(opts) : '');
   return matCache[key] || (matCache[key] = new THREE.MeshLambertMaterial({ color: c, ...opts }));
 };
-const boxGeo = (w, h, d) => { const k = `${w}|${h}|${d}`; return geoCache[k] || (geoCache[k] = new THREE.BoxGeometry(w, h, d)); };
+function roundedBoxGeo(w, h, d, k) {
+  const S = 8, g = new THREE.BoxGeometry(w, h, d, S, S, S);
+  const half = [w / 2, h / 2, d / 2], r = half.map(x => x * k), lim = half.map((x, a) => x - r[a]);
+  const pos = g.attributes.position, nor = g.attributes.normal, v = [0, 0, 0], n = [0, 0, 0];
+  for (let i = 0; i < pos.count; i++) {
+    v[0] = pos.getX(i); v[1] = pos.getY(i); v[2] = pos.getZ(i);
+    let len = 0;
+    for (let a = 0; a < 3; a++) {
+      const u = v[a] / half[a]; v[a] = Math.sign(u) * (1 - (1 - Math.abs(u)) ** 2) * half[a]; // bunch vertices toward the edges
+      n[a] = (v[a] - Math.max(-lim[a], Math.min(lim[a], v[a]))) / r[a]; len += n[a] * n[a];
+    }
+    len = Math.sqrt(len) || 1;
+    let nl = 0;
+    for (let a = 0; a < 3; a++) { n[a] /= len; v[a] = Math.max(-lim[a], Math.min(lim[a], v[a])) + n[a] * r[a]; n[a] /= r[a]; nl += n[a] * n[a]; }
+    nl = Math.sqrt(nl) || 1;
+    pos.setXYZ(i, v[0], v[1], v[2]); nor.setXYZ(i, n[0] / nl, n[1] / nl, n[2] / nl);
+  }
+  return g;
+}
+const boxGeo = (w, h, d) => {
+  const k = `${w}|${h}|${d}|${roundK}`;
+  return geoCache[k] || (geoCache[k] = roundK ? roundedBoxGeo(w, h, d, roundK) : new THREE.BoxGeometry(w, h, d));
+};
 function box(w, h, d, color, x, y, z, parent) {
   const m = new THREE.Mesh(boxGeo(w, h, d), typeof color === 'string' ? mat(color) : color);
   m.position.set(x || 0, y || 0, z || 0);
@@ -264,15 +301,15 @@ const geo = (kind, ...args) => {
   return geoCache[k] || (geoCache[k] = new THREE[kind](...args));
 };
 function cone(r, h, color, x, y, z, parent, rx = 0, rz = 0) {
-  const m = new THREE.Mesh(geo('ConeGeometry', r, h, 5), mat(color));
+  const m = new THREE.Mesh(geo('ConeGeometry', r, h, 12), mat(color));
   m.position.set(x, y, z); m.rotation.set(rx, 0, rz); parent.add(m); return m;
 }
 function ball(r, color, x, y, z, parent, sx = 1, sy = 1, sz = 1) {
-  const m = new THREE.Mesh(geo('SphereGeometry', r, 14, 10), mat(color));
+  const m = new THREE.Mesh(geo('SphereGeometry', r, 20, 14), mat(color));
   m.position.set(x, y, z); m.scale.set(sx, sy, sz); parent.add(m); return m;
 }
 function tube(rTop, rBottom, h, color, x, y, z, parent) {
-  const m = new THREE.Mesh(geo('CylinderGeometry', rTop, rBottom, h, 18), mat(color));
+  const m = new THREE.Mesh(geo('CylinderGeometry', rTop, rBottom, h, 24), mat(color));
   m.position.set(x, y, z); parent.add(m); return m;
 }
 const COSTUMES = {
@@ -428,6 +465,10 @@ function buildPet(type) {
 }
 
 function buildAvatar(c) {
+  roundK = 0.8;
+  try { return buildRunner(c); } finally { roundK = 0; }
+}
+function buildRunner(c) {
   const costume = COSTUMES[c.outfit];
   const P = costume ? costume.parts : { skin: c.skin, shirt: c.shirt, sleeve: c.shirt, hand: c.skin, pants: c.pants, shoes: c.shoes };
   const t = costume && costume.thin ? 0.55 : 1, tw = t < 1 ? 0.44 : 0.74;
@@ -613,7 +654,8 @@ function crash() {
   bank += coinsRun; store.set('bank', bank);
   const newBest = score > best; if (newBest) { best = score; store.set('best', best); }
   $('#overScore').textContent = score; $('#overCoins').textContent = coinsRun; $('#overBest').textContent = best;
-  $('#overNote').textContent = newBest ? 'New best score!' : `You have ${bank} coins to spend on your avatar.`;
+  const who = runnerName ? `, ${runnerName}` : '';
+  $('#overNote').textContent = newBest ? `New best score${who}!` : `Nice run${who}! You have ${bank} coins to spend on your avatar.`;
   $('#tip').hidden = true;
   setTimeout(() => { if (state === 'over') show('#over'); }, 900);
 }
@@ -640,6 +682,7 @@ function roll() {
   player.roll = ROLL_TIME; sfx('roll');
 }
 window.addEventListener('keydown', e => {
+  if (e.target === nameInput) { if (e.key === 'Enter') nameInput.blur(); return; }
   const k = e.key.toLowerCase();
   if (['arrowleft', 'a'].includes(k)) move(-1);
   else if (['arrowright', 'd'].includes(k)) move(1);
@@ -837,6 +880,22 @@ const camLook = new THREE.Vector3(0, 1.1, 0);
 camera.position.set(0, 1.6, -4.4);
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// Name tag floats above the runner's head.
+const nameInput = $('#runnerName'), nameTag = $('#nameTag'), tagPos = new THREE.Vector3();
+nameInput.value = runnerName;
+nameInput.addEventListener('input', () => { runnerName = nameInput.value.trim(); store.set('name', runnerName); });
+function placeNameTag() {
+  avatar.head.getWorldPosition(tagPos);
+  tagPos.y += 0.85 + avatar.tall;
+  tagPos.project(camera);
+  const show = runnerName && state !== 'pause' && tagPos.z < 1;
+  nameTag.hidden = !show;
+  if (!show) return;
+  nameTag.textContent = runnerName;
+  nameTag.style.left = ((tagPos.x + 1) / 2 * app.clientWidth) + 'px';
+  nameTag.style.top = ((1 - tagPos.y) / 2 * app.clientHeight) + 'px';
+}
+
 function resize() {
   const w = app.clientWidth, h = app.clientHeight;
   renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
@@ -848,6 +907,7 @@ let last = performance.now();
 function loop(t) {
   const dt = Math.min((t - last) / 1000, 0.05); last = t;
   update(dt);
+  placeNameTag();
   renderer.render(scene, camera);
   requestAnimationFrame(loop);
 }
