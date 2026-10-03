@@ -34,6 +34,8 @@ for (const [key, opt] of Object.entries(OPTIONS)) {
 
 // ---------- Emotes ----------
 const ramp = (t, d, r = 0.25) => Math.max(0, Math.min(1, t / r, (d - t) / r));
+const mix = (from, to, w) => from + (to - from) * w;
+const smooth = (start, end, t) => { const u = Math.max(0, Math.min(1, (t - start) / (end - start))); return u * u * (3 - 2 * u); };
 const EMOTES = {
   wave: { name: 'Wave', dur: 2.2, pose(a, t, d) {
     const k = ramp(t, d);
@@ -73,6 +75,48 @@ const EMOTES = {
     a.arms[0].rotation.z = -k * (0.5 + sw * 0.3); a.arms[0].rotation.x = k * Math.cos(b) * 0.6;
     a.legs.forEach((l, i) => { l.rotation.x = Math.max(0, Math.sin(b + i * Math.PI)) * 0.4 * k; });
     a.head.rotation.z = -sw * 0.15 * k; a.head.rotation.x = 0.1 * k;
+  } },
+  moonwalk: { name: 'Moonwalk', dur: 4, price: 50, pose(a, t, d) {
+    // Slide backwards for most of it, then glide back to the start.
+    // Turned side-on so the slide shows.
+    const k = ramp(t, d), p = t / d, s = Math.sin(t * 7);
+    a.root.rotation.y = Math.PI / 2 * k;
+    a.root.position.x += 1.4 * (p < 0.8 ? p / 0.8 : (1 - p) / 0.2);
+    a.legs[0].rotation.x = 0.35 * s * k; a.legs[1].rotation.x = -0.35 * s * k;
+    a.body.rotation.x = -0.08 * k; a.body.position.y = 0.95 - Math.abs(s) * 0.04 * k;
+    a.arms[0].rotation.x = -0.25 * s * k; a.arms[1].rotation.x = 0.25 * s * k;
+    a.arms[0].rotation.z = -0.15 * k; a.arms[1].rotation.z = 0.15 * k;
+    a.head.rotation.z = 0.12 * k;
+  } },
+  worm: { name: 'The Worm', dur: 3.6, price: 50, pose(a, t, d) {
+    // Drop to the floor face down, then ripple like a worm.
+    const k = ramp(t, d, 0.4), b = t * 6;
+    a.root.rotation.y = Math.PI / 2 * k; // side-on so the wiggle shows
+    a.body.rotation.x = (-Math.PI / 2 + Math.sin(b) * 0.25) * k;
+    a.body.position.y = 0.95 - k * (0.6 - Math.abs(Math.sin(b)) * 0.18);
+    a.legs.forEach(l => { l.rotation.x = (Math.sin(b + 1.2) * 0.5 - 0.2) * k; });
+    a.arms.forEach(arm => { arm.rotation.x = (1.3 + Math.sin(b) * 0.35) * k; });
+    a.head.rotation.x = (0.5 + Math.sin(b - 0.8) * 0.2) * k;
+  } },
+  ransom: { name: 'Ransom', dur: 3.4, price: 50, pose(a, t, d) {
+    // Bouncy arm rolls in front, nodding to the beat.
+    const k = ramp(t, d), b = t * 7, s = Math.sin(b), c = Math.cos(b);
+    a.body.position.y = 0.95 - Math.abs(s) * 0.07 * k; a.body.rotation.z = Math.sin(b / 2) * 0.12 * k;
+    a.arms[0].rotation.x = (1.3 + s * 0.4) * k; a.arms[0].rotation.z = (-0.3 + c * 0.3) * k;
+    a.arms[1].rotation.x = (1.3 - s * 0.4) * k; a.arms[1].rotation.z = (0.3 + c * 0.3) * k;
+    a.legs.forEach((l, i) => { l.rotation.x = Math.max(0, Math.sin(b / 2 + i * Math.PI)) * 0.35 * k; });
+    a.head.rotation.x = s * 0.12 * k;
+  } },
+  thatway: { name: 'I Want It That Way', dur: 4.2, price: 50, pose(a, t, d) {
+    // Hand on heart, reach out to the crowd, then point to the sky.
+    const k = ramp(t, d), toReach = smooth(1.2, 1.6, t), toSky = smooth(2.6, 3.0, t);
+    a.arms[1].rotation.x = k * mix(mix(1.6, 1.4, toReach), 0.3, toSky);
+    a.arms[1].rotation.z = k * mix(mix(-0.7, 0.5, toReach), 2.9, toSky);
+    a.arms[0].rotation.x = k * mix(1.2 * toReach, 0, toSky);
+    a.arms[0].rotation.z = k * mix(-0.4 * toReach, -0.2, toSky);
+    a.head.rotation.x = k * mix(mix(-0.15, 0, toReach), 0.3, toSky);
+    a.body.rotation.z = Math.sin(t * 2.5) * 0.1 * k;
+    a.legs[1].rotation.x = 0.25 * toReach * k;
   } },
 };
 const emoteOwned = id => !EMOTES[id].price || owned.includes('emote:' + id);
