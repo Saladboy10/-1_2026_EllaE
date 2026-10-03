@@ -557,6 +557,8 @@ function crash() {
 // Codes are stored scrambled, so they can't be read from the page. To add one, scramble the
 // code word in capitals with codeHash() and add a line here. A prize can give coins and/or
 // unlock items ("outfit:merc", "pet:fox", "emote:dab", "hat:crown", "extra:cape").
+// Each code works for only CODE_LIMIT players in total (a code can set its own `max`).
+const CODE_LIMIT = 3;
 const CODES = {
   '13190cf8': { coins: 100 },
 };
@@ -573,19 +575,37 @@ function itemName(key) {
   return v ? v[1] : id;
 }
 function codeMessage(text, good) { const m = $('#codeMsg'); m.textContent = text; m.className = 'code-msg ' + (good ? 'good' : 'bad'); }
-function redeemCode() {
+let redeeming = false;
+async function redeemCode() {
+  if (redeeming) return;
   const word = codeInput.value.trim().toUpperCase().replace(/\s+/g, '');
   if (!word) { codeMessage('Type a code first.', false); return; }
   const id = codeHash(word), prize = CODES[id];
   if (!prize) { codeMessage('That code doesn’t work. Check the spelling!', false); return; }
   if (owned.includes('code:' + id)) { codeMessage('You already used that code.', false); return; }
+  const max = prize.max || CODE_LIMIT;
+  redeeming = true; $('#redeemBtn').disabled = true; codeMessage('Checking your code…', true);
+  const claim = await Leaderboard.claimCode(id, max);
+  redeeming = false; $('#redeemBtn').disabled = false;
+  if (!claim.ok) {
+    const why = {
+      'already': 'You already used that code.',
+      'used-up': `Too late! ${max} players already used this code.`,
+      'busy': 'Lots of people are trying this code. Try again in a moment.',
+      'readonly': 'Only players with Contributor access can use codes. Ask the owner to share the game with you as a Contributor.',
+      'error': 'Your code couldn’t be checked. Try again.',
+    }[claim.reason];
+    if (why) { codeMessage(why, false); if (claim.reason === 'already') { owned.push('code:' + id); store.set('owned', owned); } return; }
+    // 'offline' (opened as a plain file): there's no shared record, so only the once-per-player rule applies.
+  }
   const got = [];
   if (prize.coins) { bank += prize.coins; got.push(`${prize.coins} coins`); }
   for (const key of prize.unlock || []) { if (!owned.includes(key)) owned.push(key); got.push(itemName(key)); }
   owned.push('code:' + id);
   store.set('bank', bank); store.set('owned', owned);
   codeInput.value = '';
-  codeMessage(`Code worked! You got ${got.join(' and ')}.`, true);
+  const spots = claim.ok ? ` (${claim.used} of ${max} spots used)` : '';
+  codeMessage(`Code worked! You got ${got.join(' and ')}.${spots}`, true);
   sfx('coin'); refreshMenu();
 }
 $('#codesBtn').onclick = () => { codeMessage('', true); show('#codes'); codeInput.focus(); };

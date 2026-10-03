@@ -1,7 +1,9 @@
-// Shared leaderboards for every game in the lobby.
+// Shared storage for every game in the lobby: leaderboards and limited secret codes.
 // Each game keeps its own board: one entry per player holding their best score.
-// Boards only work in the published game (they need the shared database); opened
-// as a plain file, every call quietly reports that the board is unavailable.
+// Secret codes can only be claimed by a set number of players; each player's claimed
+// codes live in claims/<player id>.
+// This only works in the published game (it needs the shared database); opened as a
+// plain file, every call quietly reports that it is unavailable.
 const Leaderboard = (() => {
   let ready = null, myId = null;
 
@@ -50,5 +52,35 @@ const Leaderboard = (() => {
     });
   }
 
-  return { submit, watch };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  // Claim a secret code for this player if fewer than `max` players have it.
+  // Resolves { ok: true, used, max } or { ok: false, reason: 'already' | 'used-up' | 'busy' | 'readonly' | 'offline' | 'error' }.
+  async function claimCode(code, max) {
+    const db = await connect();
+    if (!db) return { ok: false, reason: 'offline' };
+    try {
+      // A short lock on the code so two players can't take the last spot at the same moment.
+      const lock = db.doc('codelocks/' + code);
+      let held = false;
+      for (let i = 0; i < 4 && !held; i++) {
+        held = (await lock.acquire({ holder: myId, ttlMs: 8000 })).acquired;
+        if (!held) await wait(700);
+      }
+      if (!held) return { ok: false, reason: 'busy' };
+      const mine = db.collection('claims').doc(myId);
+      const snap = await mine.get();
+      const codes = snap.exists ? [...(snap.data().codes || [])] : [];
+      if (codes.includes(code)) return { ok: false, reason: 'already' };
+      const taken = await db.collection('claims').where('codes', 'array-contains', code).get();
+      if (taken.size >= max) return { ok: false, reason: 'used-up', max };
+      codes.push(code);
+      await mine.set({ codes });
+      return { ok: true, used: taken.size + 1, max };
+    } catch (e) {
+      return { ok: false, reason: e && e.code === 'invalid_argument' ? 'readonly' : 'error' };
+    }
+  }
+
+  return { submit, watch, claimCode };
 })();
