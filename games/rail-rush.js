@@ -518,6 +518,7 @@ const view = { x: 0, y: 0 };
 
 function show(id) {
   for (const p of ['#menu', '#custom', '#over', '#paused', '#codes']) $(p).hidden = p !== id;
+  $('#codesBtn').hidden = id !== '#menu';
   $('#hud').hidden = !(state === 'play' || state === 'pause' || state === 'over');
 }
 function refreshMenu() {

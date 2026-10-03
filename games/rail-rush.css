@@ -106,3 +106,7 @@
   .code-msg { margin: 0; min-height: 1.4em; font-weight: 800; }
   .code-msg.good { color: #1f8a4c; }
   .code-msg.bad { color: #c2264f; }
+  .corner-btn { position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); left: 16px; z-index: 4;
+    font-family: var(--display); font-size: 1.1rem; padding: 10px 18px; border: 3px solid var(--ink); border-radius: 14px;
+    background: var(--signal); color: var(--ink); box-shadow: 0 4px 0 var(--ink); }
+  .corner-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
