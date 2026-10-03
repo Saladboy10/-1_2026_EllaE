@@ -1264,7 +1264,22 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // Name tag floats above the runner's head.
 const nameInput = $('#runnerName'), nameTag = $('#nameTag'), tagPos = new THREE.Vector3();
 nameInput.value = runnerName;
-nameInput.addEventListener('input', () => { runnerName = nameInput.value.trim(); store.set('name', runnerName); });
+nameInput.addEventListener('input', () => { runnerName = nameInput.value.trim(); store.set('name', runnerName); checkSecretName(); });
+// A secret runner name unlocks everything in the shop. It's stored scrambled, like the codes.
+const SECRET_NAME = '028d1ebc';
+function checkSecretName() {
+  if (codeHash(runnerName.toUpperCase().replace(/\s+/g, '')) !== SECRET_NAME) return;
+  const all = [];
+  for (const [key, opt] of Object.entries(OPTIONS)) if (opt.type === 'style') for (const v of opt.values) if (v[2]) all.push(key + ':' + v[0]);
+  for (const [id, e] of Object.entries(EMOTES)) if (e.price) all.push('emote:' + id);
+  const fresh = all.filter(k => !owned.includes(k));
+  if (!fresh.length) return;
+  owned.push(...fresh); store.set('owned', owned);
+  toast('Secret name! Everything is unlocked.');
+  if (state === 'custom') renderCustom();
+  refreshMenu();
+}
+checkSecretName();
 function placeNameTag() {
   avatar.head.getWorldPosition(tagPos);
   tagPos.y += 0.85 + avatar.tall;
