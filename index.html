@@ -89,7 +89,10 @@
     <div class="emote-bar" id="menuEmotes" aria-label="Emotes"></div>
     <button class="btn primary" id="playBtn">Run!</button>
     <button class="btn" id="customBtn">Customize avatar</button>
-    <button class="btn" id="lobbyLink" type="button">Back to lobby</button>
+    <div class="row">
+      <button class="btn" id="codesBtn" type="button">Codes</button>
+      <button class="btn" id="lobbyLink" type="button">Back to lobby</button>
+    </div>
   </section>
 
   <section id="custom" class="panel" hidden>
@@ -125,6 +128,16 @@
       <button class="btn" id="overCustomBtn">Avatar</button>
       <button class="btn" id="overMenuBtn">Menu</button>
     </div>
+  </section>
+
+  <section id="codes" class="panel center" hidden>
+    <h2>Secret codes</h2>
+    <p class="hint">Got a secret code? Type it here to unlock a prize.</p>
+    <label class="name-field" for="codeInput"><span>Code</span>
+      <input id="codeInput" type="text" maxlength="24" placeholder="Type a code" autocomplete="off" spellcheck="false" autocapitalize="characters" enterkeyhint="go"></label>
+    <p class="code-msg" id="codeMsg" role="status"></p>
+    <button class="btn primary" id="redeemBtn" type="button">Redeem</button>
+    <button class="btn" id="codesBackBtn" type="button">Back</button>
   </section>
 
   <section id="paused" class="panel center" hidden>

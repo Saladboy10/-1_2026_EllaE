@@ -21,6 +21,7 @@ A 3D endless runner. Dodge trains and barriers across three tracks, grab coins, 
 - **Jump:** ↑ (or W / Space), or swipe up. Jump over red-and-white barriers.
 - **Roll:** ↓ (or S), or swipe down. Roll under yellow-and-black barriers.
 - **Pause:** P or Esc
+- **Secret codes:** press **Codes** on the main menu and type a code to get a prize. Each code works once per player. Try `LEVELUP` for 100 coins.
 - **Leaderboard:** when a run ends, your best score is saved under your runner's name. The top 5 show on the crash screen. Press **Leaderboard** on the game's card in the lobby to see the top 20 (place, name, score).
 
 **Customize avatar** lets you type your runner's name (it floats above them and shows on the score screen) and pick a ready-made outfit or build your own look:

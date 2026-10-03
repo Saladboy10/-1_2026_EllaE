@@ -517,7 +517,7 @@ const player = { lane: 1, x: 0, y: 0, vy: 0, roll: 0 };
 const view = { x: 0, y: 0 };
 
 function show(id) {
-  for (const p of ['#menu', '#custom', '#over', '#paused']) $(p).hidden = p !== id;
+  for (const p of ['#menu', '#custom', '#over', '#paused', '#codes']) $(p).hidden = p !== id;
   $('#hud').hidden = !(state === 'play' || state === 'pause' || state === 'over');
 }
 function refreshMenu() {
@@ -552,6 +552,45 @@ function crash() {
   setTimeout(() => { if (state === 'over') show('#over'); }, 900);
   submitScore(score);
 }
+
+// ---------- Secret codes ----------
+// Codes are stored scrambled, so they can't be read from the page. To add one, scramble the
+// code word in capitals with codeHash() and add a line here. A prize can give coins and/or
+// unlock items ("outfit:merc", "pet:fox", "emote:dab", "hat:crown", "extra:cape").
+const CODES = {
+  '13190cf8': { coins: 100 },
+};
+function codeHash(text) {
+  let h = 0x811c9dc5;
+  for (const b of new TextEncoder().encode(text)) { h ^= b; h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(16).padStart(8, '0');
+}
+const codeInput = $('#codeInput');
+function itemName(key) {
+  const [group, id] = key.split(':');
+  if (group === 'emote') return EMOTES[id] ? EMOTES[id].name : id;
+  const v = OPTIONS[group] && OPTIONS[group].values.find(x => x[0] === id);
+  return v ? v[1] : id;
+}
+function codeMessage(text, good) { const m = $('#codeMsg'); m.textContent = text; m.className = 'code-msg ' + (good ? 'good' : 'bad'); }
+function redeemCode() {
+  const word = codeInput.value.trim().toUpperCase().replace(/\s+/g, '');
+  if (!word) { codeMessage('Type a code first.', false); return; }
+  const id = codeHash(word), prize = CODES[id];
+  if (!prize) { codeMessage('That code doesn’t work. Check the spelling!', false); return; }
+  if (owned.includes('code:' + id)) { codeMessage('You already used that code.', false); return; }
+  const got = [];
+  if (prize.coins) { bank += prize.coins; got.push(`${prize.coins} coins`); }
+  for (const key of prize.unlock || []) { if (!owned.includes(key)) owned.push(key); got.push(itemName(key)); }
+  owned.push('code:' + id);
+  store.set('bank', bank); store.set('owned', owned);
+  codeInput.value = '';
+  codeMessage(`Code worked! You got ${got.join(' and ')}.`, true);
+  sfx('coin'); refreshMenu();
+}
+$('#codesBtn').onclick = () => { codeMessage('', true); show('#codes'); codeInput.focus(); };
+$('#redeemBtn').onclick = redeemCode;
+$('#codesBackBtn').onclick = toMenu;
 
 // ---------- Leaderboard ----------
 let boardRows = null;
@@ -611,6 +650,7 @@ function roll() {
 window.addEventListener('keydown', e => {
   if (!active) return;
   if (e.target === nameInput) { if (e.key === 'Enter') nameInput.blur(); return; }
+  if (e.target === codeInput) { if (e.key === 'Enter') redeemCode(); return; }
   const k = e.key.toLowerCase();
   if (['arrowleft', 'a'].includes(k)) move(-1);
   else if (['arrowright', 'd'].includes(k)) move(1);
@@ -830,7 +870,7 @@ function update(dt) {
   // Shift the view so the avatar sits in the space a panel leaves open.
   let ox = 0, oy = 0;
   const w = app.clientWidth, h = app.clientHeight;
-  const panel = state === 'custom' ? $('#custom') : state === 'menu' ? $('#menu') : null;
+  const panel = state === 'custom' ? $('#custom') : state === 'menu' ? ($('#codes').hidden ? $('#menu') : $('#codes')) : null;
   if (panel && !panel.hidden) {
     const r = panel.getBoundingClientRect();
     if (state === 'custom' && w > 760) ox = (w - r.left) / 2; else oy = Math.max(0, (h - r.top) / 2 - h * 0.05);
