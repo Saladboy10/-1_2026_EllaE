@@ -66,6 +66,27 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 20px; text-align: center; }
   #lobby .slot b { font-family: var(--display); font-weight: 400; font-size: 2.6rem; line-height: 1; opacity: .5; }
   #lobby .slot span { font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; opacity: .7; }
+  #lobby .corner-actions { position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); right: 16px; display: flex; gap: 8px; z-index: 2; }
+  #lobby .req-btn { font-family: var(--display); font-size: .95rem; padding: 10px 14px; border: 3px solid var(--ink); border-radius: 14px;
+    background: var(--paper); color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; }
+  #lobby .req-btn.primary { background: var(--signal); }
+  #lobby .req-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  #lobby .req-btn:focus-visible, #lobby textarea:focus-visible, #lobby input:focus-visible { outline: 3px solid var(--spray); outline-offset: 2px; }
+  #lobby .req-layer { position: fixed; inset: 0; z-index: 30; background: rgba(27, 21, 48, .45); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  #lobby .req-box { background: var(--paper); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 6px 0 var(--ink); padding: 20px;
+    width: min(460px, 100%); max-height: calc(100% - 32px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  #lobby .req-box h2 { margin: 0; }
+  #lobby .req-hint { margin: 0; line-height: 1.4; }
+  #lobby .req-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+  #lobby textarea { font: inherit; font-weight: 700; padding: 10px 12px; border: 3px solid var(--ink); border-radius: 12px; background: var(--mist); color: var(--ink); resize: vertical; -webkit-user-select: text; user-select: text; }
+  #lobby #reqPreview { max-width: 100%; max-height: 200px; object-fit: contain; border: 3px solid var(--ink); border-radius: 12px; align-self: flex-start; }
+  #lobby .req-msg { margin: 0; font-weight: 800; min-height: 1.3em; }
+  #lobby .req-row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+  #lobby .inbox-item { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 2px dashed var(--ink); }
+  #lobby .inbox-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; border: 2px solid var(--ink); }
+  #lobby .inbox-item p { margin: 0; overflow-wrap: anywhere; }
+  #lobby .inbox-item small { opacity: .7; }
+  @media (max-width: 520px) { #lobby main { padding-top: 84px; } }
   @media (prefers-reduced-motion: reduce) { #lobby .play { transition: none; } }
 </style>
 </head>
@@ -152,6 +173,33 @@
 
 
 <section id="lobby" aria-label="Game lobby">
+<div class="corner-actions">
+  <button class="req-btn" id="inboxBtn" type="button" hidden>Inbox</button>
+  <button class="req-btn primary" id="requestBtn" type="button">Request a skin</button>
+</div>
+<div class="req-layer" id="requestLayer" hidden>
+  <div class="req-box" role="dialog" aria-labelledby="reqTitle">
+    <h2 id="reqTitle">Request a skin</h2>
+    <p class="req-hint">Who or what should become a skin, pet or emote? Type it, add a photo, or both.</p>
+    <label class="req-label" for="reqText">Your idea</label>
+    <textarea id="reqText" maxlength="300" rows="3" placeholder="Like: my dog Milo as a pet, or a pirate skin"></textarea>
+    <label class="req-label" for="reqPhoto">Photo (optional)</label>
+    <input id="reqPhoto" type="file" accept="image/*">
+    <img id="reqPreview" alt="Your photo" hidden>
+    <p class="req-msg" id="reqMsg" role="status"></p>
+    <div class="req-row">
+      <button class="req-btn" id="reqCancel" type="button">Close</button>
+      <button class="req-btn primary" id="reqSend" type="button">Send request</button>
+    </div>
+  </div>
+</div>
+<div class="req-layer" id="inboxLayer" hidden>
+  <div class="req-box" role="dialog" aria-labelledby="inboxTitle">
+    <h2 id="inboxTitle">Skin requests</h2>
+    <div id="inboxList"></div>
+    <div class="req-row"><button class="req-btn" id="inboxClose" type="button">Close</button></div>
+  </div>
+</div>
 <main>
   <header>
     <h1>Level Up</h1>
@@ -253,6 +301,56 @@
     });
   });
   refresh();
+
+  // Skin requests: anyone can send one; the owner gets an inbox.
+  const $id = id => document.getElementById(id);
+  let photoData = '';
+  const reqMsg = (text, bad) => { $id('reqMsg').textContent = text; $id('reqMsg').style.color = bad ? '#c2264f' : '#1f8a4c'; };
+  $id('requestBtn').onclick = () => { $id('requestLayer').hidden = false; reqMsg('', false); $id('reqText').focus(); };
+  $id('reqCancel').onclick = () => { $id('requestLayer').hidden = true; };
+  // Shrink photos so they stay small enough to store.
+  $id('reqPhoto').onchange = () => {
+    const file = $id('reqPhoto').files[0];
+    if (!file) return;
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, 360 / Math.max(img.width, img.height));
+      const cv = document.createElement('canvas'); cv.width = Math.round(img.width * scale); cv.height = Math.round(img.height * scale);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      let q = 0.75; photoData = cv.toDataURL('image/jpeg', q);
+      while (photoData.length > 60000 && q > 0.3) { q -= 0.1; photoData = cv.toDataURL('image/jpeg', q); }
+      $id('reqPreview').src = photoData; $id('reqPreview').hidden = false; URL.revokeObjectURL(url);
+    };
+    img.onerror = () => { reqMsg('That file isn’t a photo we can use. Try a JPG or PNG.', true); URL.revokeObjectURL(url); };
+    img.src = url;
+  };
+  $id('reqSend').onclick = async () => {
+    const text = $id('reqText').value.trim();
+    if (!text && !photoData) { reqMsg('Type an idea or add a photo first.', true); return; }
+    $id('reqSend').disabled = true; reqMsg('Sending…', false);
+    let name = ''; try { name = JSON.parse(localStorage.getItem('railrush.name')) || ''; } catch {}
+    const r = await Leaderboard.sendRequest({ name, text, photo: photoData });
+    $id('reqSend').disabled = false;
+    if (r.ok) { reqMsg('Request sent! Thanks for the idea.', false); $id('reqText').value = ''; $id('reqPhoto').value = ''; photoData = ''; $id('reqPreview').hidden = true; }
+    else reqMsg({ offline: 'Requests can only be sent from the published game.', readonly: 'Only players with Contributor access can send requests. Ask the owner to share the game with you as a Contributor.' }[r.reason] || 'Your request couldn’t be sent. Try again.', true);
+  };
+  Leaderboard.isOwner().then(owner => { $id('inboxBtn').hidden = !owner; });
+  $id('inboxBtn').onclick = async () => {
+    const list = $id('inboxList'); list.textContent = 'Loading…'; $id('inboxLayer').hidden = false;
+    const items = await Leaderboard.listRequests();
+    list.innerHTML = '';
+    if (!items.length) { list.textContent = 'No requests yet.'; return; }
+    for (const item of items) {
+      const row = document.createElement('div'); row.className = 'inbox-item';
+      const pic = document.createElement('img'); pic.alt = 'Request photo';
+      if (typeof item.photo === 'string' && item.photo.startsWith('data:image/jpeg;base64,')) pic.src = item.photo; else pic.hidden = true;
+      const body = document.createElement('div');
+      const p = document.createElement('p'); p.textContent = item.text || '(photo only)';
+      const who = document.createElement('small'); who.textContent = (item.name || 'A player') + ' · ' + new Date(item.at).toLocaleDateString();
+      body.append(p, who); row.append(pic, body); list.appendChild(row);
+    }
+  };
+  $id('inboxClose').onclick = () => { $id('inboxLayer').hidden = true; };
 })();
 </script>
 </body>

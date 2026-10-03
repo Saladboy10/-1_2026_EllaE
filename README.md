@@ -2,10 +2,13 @@
 
 Open `index.html` in a web browser for the **Level Up** game lobby, then pick a game. No install needed.
 
+## Skin requests
+Players press **Request a skin** in the top corner of the lobby to send an idea, with an optional photo. The owner sees them under **Inbox** (only the owner gets that button).
+
 ## How it's organized
 - `index.html` is the lobby. Every game lives inside this one page; the lobby covers the screen until you press Play.
 - `games/` holds each game's own code (`rail-rush.js`, `rail-rush.css`).
-- `leaderboard.js` runs the shared leaderboards. Each game has its own board with every player's best score.
+- `leaderboard.js` runs the shared storage: leaderboards, limited secret codes and skin requests. Each game has its own board with every player's best score.
   Boards work in the published game; opened as a plain file, the games still play but the board stays hidden.
 - `assets/` holds the pictures on the lobby cards.
 

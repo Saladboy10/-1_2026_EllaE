@@ -5,7 +5,7 @@
 // This only works in the published game (it needs the shared database); opened as a
 // plain file, every call quietly reports that it is unavailable.
 const Leaderboard = (() => {
-  let ready = null, myId = null;
+  let ready = null, myId = null, viewer = null;
 
   function connect() {
     if (!ready) {
@@ -13,7 +13,7 @@ const Leaderboard = (() => {
         if (!window.claude || !window.claude.use) return null;
         const [db, user] = await Promise.all([claude.use('db'), claude.use('user')]);
         if (!db || !user) return null;
-        myId = await user.id();
+        viewer = user; myId = await user.id();
         return myId ? db : null;
       })().catch(() => null);
     }
@@ -82,5 +82,29 @@ const Leaderboard = (() => {
     }
   }
 
-  return { submit, watch, claimCode };
+  // Skin requests: each player keeps their latest few in requests/<player id>; only the owner reads them all.
+  const KEEP_REQUESTS = 4;
+  async function sendRequest({ name, text, photo }) {
+    const db = await connect();
+    if (!db) return { ok: false, reason: 'offline' };
+    try {
+      const ref = db.collection('requests').doc(myId);
+      const snap = await ref.get();
+      const items = snap.exists ? [...(snap.data().items || [])] : [];
+      items.push({ name, text, photo: photo || '', at: Date.now() });
+      await ref.set({ items: items.slice(-KEEP_REQUESTS) });
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, reason: e && e.code === 'invalid_argument' ? 'readonly' : 'error' };
+    }
+  }
+  async function isOwner() { await connect(); return viewer ? viewer.isOwner() : false; }
+  async function listRequests() {
+    const db = await connect();
+    if (!db) return [];
+    const snap = await db.collection('requests').get();
+    return snap.docs.flatMap(d => d.data().items || []).sort((a, b) => b.at - a.at);
+  }
+
+  return { submit, watch, claimCode, sendRequest, isOwner, listRequests };
 })();
