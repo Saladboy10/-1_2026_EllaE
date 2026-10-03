@@ -2,232 +2,358 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Star Catcher</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Level Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="games/rail-rush.css">
 <style>
-  :root { --bg: #0b1026; --fg: #f4f1ff; --accent: #ffd34d; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; touch-action: none; }
-  canvas { display: block; width: 100vw; height: 100vh; }
-  #overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; text-align: center; padding: 16px; background: rgba(11,16,38,.75); }
-  #overlay.hidden { display: none; }
-  h1 { font-size: clamp(2rem, 8vw, 4rem); margin: 0 0 .3em; color: var(--accent); letter-spacing: .03em; }
-  p { margin: .3em 0; max-width: 32em; line-height: 1.5; }
-  button { margin-top: 1em; font: inherit; font-size: 1.2rem; padding: .7em 2em; border: 0; border-radius: 999px;
-    background: var(--accent); color: #1a1440; font-weight: 700; cursor: pointer; }
-  button:hover { filter: brightness(1.1); }
+  /* Lobby: a full-screen layer over the games. One centered column; game cards in a
+     wrapping grid, upcoming games as dashed empty slots. */
+  #lobby {
+    --sky-deep: #5fb8f0;
+    position: fixed; inset: 0; z-index: 20; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    background: var(--sky) linear-gradient(180deg, var(--sky) 0%, var(--sky-deep) 100%);
+    color: var(--ink); font-family: var(--body); font-weight: 600; touch-action: pan-y;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  #lobby main { max-width: 1040px; margin: 0 auto; padding-inline: 16px; padding-block: 40px 56px; display: flex; flex-direction: column; gap: 36px; }
+  #lobby header { display: flex; flex-direction: column; gap: 10px; }
+  #lobby h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 10vw, 4.8rem); line-height: .95; margin: 0;
+    color: var(--signal); -webkit-text-stroke: 2px var(--ink); text-shadow: 0 6px 0 var(--ink); text-wrap: balance; }
+  #lobby .tagline { margin: 0; font-size: 1.15rem; max-width: 40em; }
+  #lobby .maker { margin: 0; font-family: var(--display); font-size: 1rem; letter-spacing: .04em; color: var(--ink); }
+  #lobby h2 { font-family: var(--display); font-weight: 400; font-size: 1.4rem; margin: 0 0 14px; letter-spacing: .02em;
+    color: var(--ink); -webkit-text-stroke: 0; text-shadow: none; }
+  #lobby .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+  #lobby .card { background: var(--paper); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 6px 0 var(--ink);
+    overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+  #lobby .card img { display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-bottom: 3px solid var(--ink); background: var(--mist); }
+  #lobby .card-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  #lobby .card h3 { font-family: var(--display); font-weight: 400; font-size: 1.5rem; margin: 0; }
+  #lobby .card p { margin: 0; line-height: 1.45; }
+  #lobby .meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  #lobby .pill { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; padding: 4px 10px;
+    border-radius: 999px; background: var(--mist); border: 2px solid var(--ink); font-variant-numeric: tabular-nums; }
+  #lobby .pill.best { background: var(--signal); }
+  #lobby .top { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-variant-numeric: tabular-nums; }
+  #lobby .actions { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  #lobby .board-btn { font-family: var(--display); font-size: 1rem; padding: 12px 10px; border: 3px solid var(--ink); border-radius: 14px;
+    background: var(--mist); color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; }
+  #lobby .board-btn:active, #lobby .back:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  #lobby .board-btn:focus-visible, #lobby .back:focus-visible { outline: 3px solid var(--spray); outline-offset: 3px; }
+  #lobby .back { align-self: flex-start; font-family: var(--display); font-size: 1rem; padding: 10px 16px; border: 3px solid var(--ink);
+    border-radius: 14px; background: var(--paper); color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; }
+  #lobby #leaderPage { max-width: 640px; }
+  #lobby .leaders { display: flex; flex-direction: column; gap: 6px; background: var(--paper); border: 3px solid var(--ink);
+    border-radius: 20px; box-shadow: 0 6px 0 var(--ink); padding: 18px; }
+  #lobby .leaders .top li { font-size: 1.05rem; padding-block: 6px; }
+  #lobby .leaders-head, #lobby .top li { display: grid; grid-template-columns: 4.2rem minmax(0, 1fr) auto; gap: 8px; padding: 3px 10px; }
+  #lobby .leaders-head { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; opacity: .7; }
+  #lobby .top li { border-radius: 10px; background: var(--mist); }
+  #lobby .top li:nth-child(-n+3) { font-weight: 800; }
+  #lobby .top .pts { font-family: var(--display); }
+  #lobby .leaders-note { margin: 0; font-size: .9rem; opacity: .75; }
+  #lobby .top li.me { background: var(--signal); font-weight: 800; }
+  #lobby .top .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #lobby .play { display: block; width: 100%; text-align: center; color: var(--ink);
+    font-family: var(--display); font-size: 1.3rem; padding: 12px 16px; border: 3px solid var(--ink); border-radius: 14px;
+    background: var(--signal); box-shadow: 0 4px 0 var(--ink); transition: transform .06s; cursor: pointer; }
+  #lobby .play:hover { filter: brightness(1.05); }
+  #lobby .play:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  #lobby .play:focus-visible { outline: 3px solid var(--spray); outline-offset: 3px; }
+  #lobby .slot { border: 3px dashed var(--ink); border-radius: 20px; background: rgba(255,255,255,.35); min-height: 180px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 20px; text-align: center; }
+  #lobby .slot b { font-family: var(--display); font-weight: 400; font-size: 2.6rem; line-height: 1; opacity: .5; }
+  #lobby .slot span { font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; opacity: .7; }
+  #lobby .corner-actions { position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); right: 16px; display: flex; gap: 8px; z-index: 2; }
+  #lobby .req-btn { font-family: var(--display); font-size: .95rem; padding: 10px 14px; border: 3px solid var(--ink); border-radius: 14px;
+    background: var(--paper); color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; }
+  #lobby .req-btn.primary { background: var(--signal); }
+  #lobby .req-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  #lobby .req-btn:focus-visible, #lobby textarea:focus-visible, #lobby input:focus-visible { outline: 3px solid var(--spray); outline-offset: 2px; }
+  #lobby .req-layer { position: fixed; inset: 0; z-index: 30; background: rgba(27, 21, 48, .45); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  #lobby .req-box { background: var(--paper); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 6px 0 var(--ink); padding: 20px;
+    width: min(460px, 100%); max-height: calc(100% - 32px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  #lobby .req-box h2 { margin: 0; }
+  #lobby .req-hint { margin: 0; line-height: 1.4; }
+  #lobby .req-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+  #lobby textarea { font: inherit; font-weight: 700; padding: 10px 12px; border: 3px solid var(--ink); border-radius: 12px; background: var(--mist); color: var(--ink); resize: vertical; -webkit-user-select: text; user-select: text; }
+  #lobby #reqPreview { max-width: 100%; max-height: 200px; object-fit: contain; border: 3px solid var(--ink); border-radius: 12px; align-self: flex-start; }
+  #lobby .req-msg { margin: 0; font-weight: 800; min-height: 1.3em; }
+  #lobby .req-row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+  #lobby .inbox-item { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 2px dashed var(--ink); }
+  #lobby .inbox-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; border: 2px solid var(--ink); }
+  #lobby .inbox-item p { margin: 0; overflow-wrap: anywhere; }
+  #lobby .inbox-item small { opacity: .7; }
+  @media (max-width: 520px) { #lobby main { padding-top: 84px; } }
+  @media (prefers-reduced-motion: reduce) { #lobby .play { transition: none; } }
 </style>
 </head>
 <body>
-<canvas id="game"></canvas>
-<div id="overlay">
-  <h1>Star Catcher</h1>
-  <p id="message">Catch the falling stars ⭐ and dodge the rocks 🪨.<br>
-    Move with <b>← →</b> / <b>A D</b>, the mouse, or your finger. Press <b>P</b> to pause.</p>
-  <button id="start">Play</button>
+<div id="app">
+  <canvas id="c"></canvas>
+
+  <div id="hud" hidden>
+    <div><div id="score">0</div></div>
+    <div class="right"><span><span class="coin"></span> <span id="coins">0</span></span>
+      <button class="icon-btn" id="pauseBtn" aria-label="Pause">II</button></div>
+  </div>
+  <div id="tip" hidden>Swipe or use arrow keys<br>← → move · ↑ jump · ↓ roll</div>
+
+  <section id="menu" class="panel center">
+    <h1 class="logo">Dodge and Weave</h1>
+    <div class="stats">
+      <div class="stat"><b id="menuBest">0</b><span>Best</span></div>
+      <div class="stat"><b id="menuBank">0</b><span>Coins</span></div>
+    </div>
+    <div class="emote-bar" id="menuEmotes" aria-label="Emotes"></div>
+    <button class="btn primary" id="playBtn">Run!</button>
+    <button class="btn" id="customBtn">Customize avatar</button>
+    <button class="btn" id="lobbyLink" type="button">Back to lobby</button>
+  </section>
+
+  <section id="custom" class="panel" hidden>
+    <header>
+      <h2>Your runner</h2>
+      <span class="bank"><span class="coin"></span> <span id="customBank">0</span></span>
+    </header>
+    <label class="name-field" for="runnerName"><span>Name</span>
+      <input id="runnerName" type="text" maxlength="16" placeholder="Type your name" autocomplete="off" spellcheck="false" enterkeyhint="done">
+      <small class="hint">Your name stays the same whatever outfit you wear.</small></label>
+    <div id="options"></div>
+    <div class="row">
+      <button class="btn" id="randomBtn">Surprise me</button>
+      <button class="btn primary" id="doneBtn">Done</button>
+    </div>
+  </section>
+
+  <section id="over" class="panel center" hidden>
+    <h2>Crashed!</h2>
+    <div class="stats">
+      <div class="stat"><b id="overScore">0</b><span>Score</span></div>
+      <div class="stat"><b id="overCoins">0</b><span>Coins</span></div>
+      <div class="stat"><b id="overBest">0</b><span>Best</span></div>
+    </div>
+    <p class="hint" id="overNote"></p>
+    <div class="board" id="overBoard" hidden>
+      <h3>Leaderboard</h3>
+      <ol id="boardList"></ol>
+      <p class="hint" id="boardStatus"></p>
+    </div>
+    <button class="btn primary" id="againBtn">Run again</button>
+    <div class="row">
+      <button class="btn" id="overCustomBtn">Avatar</button>
+      <button class="btn" id="overMenuBtn">Menu</button>
+    </div>
+  </section>
+
+  <button class="corner-btn" id="codesBtn" type="button">Codes</button>
+
+  <section id="codes" class="panel center" hidden>
+    <h2>Secret codes</h2>
+    <p class="hint">Got a secret code? Type it here to unlock a prize.</p>
+    <label class="name-field" for="codeInput"><span>Code</span>
+      <input id="codeInput" type="text" maxlength="24" placeholder="Type a code" autocomplete="off" spellcheck="false" autocapitalize="characters" enterkeyhint="go"></label>
+    <p class="code-msg" id="codeMsg" role="status"></p>
+    <button class="btn primary" id="redeemBtn" type="button">Redeem</button>
+    <button class="btn" id="codesBackBtn" type="button">Back</button>
+  </section>
+
+  <section id="paused" class="panel center" hidden>
+    <h2>Paused</h2>
+    <button class="btn primary" id="resumeBtn">Keep running</button>
+    <button class="btn" id="quitBtn">Quit to menu</button>
+  </section>
+
+  <div id="nameTag" hidden></div>
+  <div id="toast" role="status"></div>
+  <div id="nogl" hidden><p>This game needs WebGL, which this browser has turned off.</p></div>
 </div>
+
+
+<section id="lobby" aria-label="Game lobby">
+<div class="corner-actions">
+  <button class="req-btn" id="inboxBtn" type="button" hidden>Inbox</button>
+  <button class="req-btn primary" id="requestBtn" type="button">Request a skin</button>
+</div>
+<div class="req-layer" id="requestLayer" hidden>
+  <div class="req-box" role="dialog" aria-labelledby="reqTitle">
+    <h2 id="reqTitle">Request a skin</h2>
+    <p class="req-hint">Who or what should become a skin, pet or emote? Type it, add a photo, or both.</p>
+    <label class="req-label" for="reqText">Your idea</label>
+    <textarea id="reqText" maxlength="300" rows="3" placeholder="Like: my dog Milo as a pet, or a pirate skin"></textarea>
+    <label class="req-label" for="reqPhoto">Photo (optional)</label>
+    <input id="reqPhoto" type="file" accept="image/*">
+    <img id="reqPreview" alt="Your photo" hidden>
+    <p class="req-msg" id="reqMsg" role="status"></p>
+    <div class="req-row">
+      <button class="req-btn" id="reqCancel" type="button">Close</button>
+      <button class="req-btn primary" id="reqSend" type="button">Send request</button>
+    </div>
+  </div>
+</div>
+<div class="req-layer" id="inboxLayer" hidden>
+  <div class="req-box" role="dialog" aria-labelledby="inboxTitle">
+    <h2 id="inboxTitle">Skin requests</h2>
+    <div id="inboxList"></div>
+    <div class="req-row"><button class="req-btn" id="inboxClose" type="button">Close</button></div>
+  </div>
+</div>
+<main>
+  <header>
+    <h1>Level Up</h1>
+    <p class="maker">Made by Ella Edge</p>
+    <p class="tagline">Pick a game and press Play. More games are on the way.</p>
+  </header>
+
+  <section aria-labelledby="games-title">
+    <h2 id="games-title">My games</h2>
+    <div class="grid">
+      <article class="card">
+        <img src="assets/rail-rush.jpg" alt="A runner with silver quills racing down train tracks past colorful buildings">
+        <div class="card-body">
+          <h3>Dodge and Weave</h3>
+          <p>Dodge trains, jump barriers and roll under signs. Collect coins to buy skins, pets and emotes.</p>
+          <div class="meta">
+            <span class="pill">3D runner</span>
+            <span class="pill best" id="best-railrush" hidden></span>
+          </div>
+          <div class="actions">
+            <button class="play" type="button" data-game="railrush">Play</button>
+            <button class="board-btn" type="button" data-board="railrush">Leaderboard</button>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="soon-title">
+    <h2 id="soon-title">Coming soon</h2>
+    <div class="grid">
+      <div class="slot"><b>?</b><span>Next game</span></div>
+      <div class="slot"><b>?</b><span>Next game</span></div>
+      <div class="slot"><b>?</b><span>Next game</span></div>
+    </div>
+  </section>
+</main>
+
+<main id="leaderPage" hidden>
+  <button class="back" id="leaderBack" type="button">← Back to lobby</button>
+  <header>
+    <h1 id="leaderTitle">Leaderboard</h1>
+    <p class="tagline">The top 20 players and their best scores.</p>
+  </header>
+  <div class="leaders" id="top-railrush" data-board="railrush" data-title="Dodge and Weave">
+    <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
+    <ol class="top"></ol>
+    <p class="leaders-note">Loading scores…</p>
+  </div>
+</main>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="leaderboard.js"></script>
+<script src="games/rail-rush.js"></script>
 <script>
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-const overlay = document.getElementById('overlay');
-const message = document.getElementById('message');
-const startBtn = document.getElementById('start');
+// Lobby: shows the game cards and hands control to a game when Play is pressed.
+(() => {
+  const GAMES = { railrush: () => window.RailRush };
+  const lobby = document.getElementById('lobby');
+  const readBest = key => { try { return Number(JSON.parse(localStorage.getItem(key))) || 0; } catch { return 0; } };
 
-let W, H, dpr;
-function resize() {
-  dpr = window.devicePixelRatio || 1;
-  W = window.innerWidth; H = window.innerHeight;
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}
-window.addEventListener('resize', resize);
-resize();
+  function refresh() {
+    const best = readBest('railrush.best'), pill = document.getElementById('best-railrush');
+    pill.hidden = !best; pill.textContent = 'Best ' + best;
+  }
+  window.Lobby = {
+    show() { for (const g of Object.values(GAMES)) g()?.close(); refresh(); showHome(); lobby.hidden = false; },
+    open(id) { lobby.hidden = true; GAMES[id]()?.open(); },
+  };
+  for (const btn of document.querySelectorAll('#lobby [data-game]')) btn.onclick = () => Lobby.open(btn.dataset.game);
 
-// Background twinkles
-const twinkles = Array.from({ length: 120 }, () => ({
-  x: Math.random(), y: Math.random(), r: Math.random() * 1.5 + 0.3, p: Math.random() * Math.PI * 2,
-}));
+  // Leaderboard screen: one per game, reached from the card's Leaderboard button.
+  const home = lobby.querySelector('main:not(#leaderPage)'), leaderPage = document.getElementById('leaderPage');
+  function showBoard(id) {
+    for (const box of leaderPage.querySelectorAll('.leaders')) box.hidden = box.dataset.board !== id;
+    document.getElementById('leaderTitle').textContent = leaderPage.querySelector(`[data-board="${id}"]`).dataset.title + ' Leaderboard';
+    home.hidden = true; leaderPage.hidden = false; lobby.scrollTop = 0;
+    document.getElementById('leaderBack').focus();
+  }
+  function showHome() { leaderPage.hidden = true; home.hidden = false; lobby.scrollTop = 0; }
+  for (const btn of document.querySelectorAll('#lobby [data-board].board-btn')) btn.onclick = () => showBoard(btn.dataset.board);
+  document.getElementById('leaderBack').onclick = showHome;
 
-function loadBest() { try { return +localStorage.getItem('starCatcherBest') || 0; } catch { return 0; } }
-function saveBest(v) { try { localStorage.setItem('starCatcherBest', v); } catch {} }
-
-let state = 'menu'; // menu | playing | paused | over
-let player, items, particles, score, lives, level, spawnTimer, best = loadBest();
-const keys = {};
-let pointerX = null;
-
-function reset() {
-  player = { x: W / 2, y: H - 70, w: 90, h: 22, speed: 520 };
-  items = []; particles = [];
-  score = 0; lives = 3; level = 1; spawnTimer = 0;
-}
-
-function spawn() {
-  const rockChance = Math.min(0.15 + level * 0.04, 0.45);
-  const roll = Math.random();
-  let type = 'star';
-  if (roll < rockChance) type = 'rock';
-  else if (roll > 0.97) type = 'heart';
-  const r = type === 'rock' ? 18 + Math.random() * 10 : 16;
-  items.push({
-    type, r, x: r + Math.random() * (W - 2 * r), y: -r,
-    vy: 140 + level * 25 + Math.random() * 60, spin: Math.random() * Math.PI * 2,
+  // Top 20 under each game's card, live.
+  const place = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+  Leaderboard.watch('railrush', 20, rows => {
+    const box = document.getElementById('top-railrush'), list = box.querySelector('ol'), note = box.querySelector('.leaders-note');
+    list.innerHTML = '';
+    note.hidden = !!(rows && rows.length);
+    note.textContent = !rows ? 'The leaderboard only works in the Claude version of Level Up.' : 'No scores yet. Play a run to get on the board!';
+    box.querySelector('.leaders-head').hidden = !(rows && rows.length);
+    if (!rows) return;
+    rows.forEach((row, i) => {
+      const li = document.createElement('li'); if (row.me) li.className = 'me';
+      for (const [cls, text] of [['rank', place(i + 1)], ['name', row.name || 'Mystery Runner'], ['pts', row.score]]) {
+        const span = document.createElement('span'); span.className = cls; span.textContent = text; li.appendChild(span);
+      }
+      list.appendChild(li);
+    });
   });
-}
+  refresh();
 
-function burst(x, y, color, n = 14) {
-  for (let i = 0; i < n; i++) {
-    const a = Math.random() * Math.PI * 2, s = 60 + Math.random() * 180;
-    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.6, color });
-  }
-}
-
-function update(dt) {
-  // Movement
-  let dir = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
-  if (dir) { player.x += dir * player.speed * dt; pointerX = null; }
-  else if (pointerX !== null) {
-    const diff = pointerX - player.x;
-    player.x += Math.sign(diff) * Math.min(Math.abs(diff), player.speed * 1.6 * dt);
-  }
-  player.x = Math.max(player.w / 2, Math.min(W - player.w / 2, player.x));
-  player.y = H - 70;
-
-  // Spawning
-  spawnTimer -= dt;
-  if (spawnTimer <= 0) { spawn(); spawnTimer = Math.max(0.25, 0.9 - level * 0.06); }
-
-  // Items
-  for (const it of items) {
-    it.y += it.vy * dt; it.spin += dt * 2;
-    const caught = it.y + it.r > player.y - player.h / 2 && it.y - it.r < player.y + player.h / 2 &&
-                   Math.abs(it.x - player.x) < player.w / 2 + it.r * 0.6;
-    if (caught) {
-      it.dead = true;
-      if (it.type === 'star') { score += 10; burst(it.x, it.y, '#ffd34d'); }
-      else if (it.type === 'heart') { lives = Math.min(lives + 1, 5); burst(it.x, it.y, '#ff6b9a'); }
-      else { lives--; burst(it.x, it.y, '#a08c7a', 24); shake = 0.3; }
-    } else if (it.y - it.r > H) {
-      it.dead = true;
+  // Skin requests: anyone can send one; the owner gets an inbox.
+  const $id = id => document.getElementById(id);
+  let photoData = '';
+  const reqMsg = (text, bad) => { $id('reqMsg').textContent = text; $id('reqMsg').style.color = bad ? '#c2264f' : '#1f8a4c'; };
+  $id('requestBtn').onclick = () => { $id('requestLayer').hidden = false; reqMsg('', false); $id('reqText').focus(); };
+  $id('reqCancel').onclick = () => { $id('requestLayer').hidden = true; };
+  // Shrink photos so they stay small enough to store.
+  $id('reqPhoto').onchange = () => {
+    const file = $id('reqPhoto').files[0];
+    if (!file) return;
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, 360 / Math.max(img.width, img.height));
+      const cv = document.createElement('canvas'); cv.width = Math.round(img.width * scale); cv.height = Math.round(img.height * scale);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      let q = 0.75; photoData = cv.toDataURL('image/jpeg', q);
+      while (photoData.length > 60000 && q > 0.3) { q -= 0.1; photoData = cv.toDataURL('image/jpeg', q); }
+      $id('reqPreview').src = photoData; $id('reqPreview').hidden = false; URL.revokeObjectURL(url);
+    };
+    img.onerror = () => { reqMsg('That file isn’t a photo we can use. Try a JPG or PNG.', true); URL.revokeObjectURL(url); };
+    img.src = url;
+  };
+  $id('reqSend').onclick = async () => {
+    const text = $id('reqText').value.trim();
+    if (!text && !photoData) { reqMsg('Type an idea or add a photo first.', true); return; }
+    $id('reqSend').disabled = true; reqMsg('Sending…', false);
+    let name = ''; try { name = JSON.parse(localStorage.getItem('railrush.name')) || ''; } catch {}
+    const r = await Leaderboard.sendRequest({ name, text, photo: photoData });
+    $id('reqSend').disabled = false;
+    if (r.ok) { reqMsg('Request sent! Thanks for the idea.', false); $id('reqText').value = ''; $id('reqPhoto').value = ''; photoData = ''; $id('reqPreview').hidden = true; }
+    else reqMsg({ offline: 'Requests can only be sent from the Claude version of Level Up.', readonly: 'You need more access to send requests. Ask the owner to give you access.' }[r.reason] || 'Your request couldn’t be sent. Try again.', true);
+  };
+  Leaderboard.isOwner().then(owner => { $id('inboxBtn').hidden = !owner; });
+  $id('inboxBtn').onclick = async () => {
+    const list = $id('inboxList'); list.textContent = 'Loading…'; $id('inboxLayer').hidden = false;
+    const items = await Leaderboard.listRequests();
+    list.innerHTML = '';
+    if (!items.length) { list.textContent = 'No requests yet.'; return; }
+    for (const item of items) {
+      const row = document.createElement('div'); row.className = 'inbox-item';
+      const pic = document.createElement('img'); pic.alt = 'Request photo';
+      if (typeof item.photo === 'string' && item.photo.startsWith('data:image/jpeg;base64,')) pic.src = item.photo; else pic.hidden = true;
+      const body = document.createElement('div');
+      const p = document.createElement('p'); p.textContent = item.text || '(photo only)';
+      const who = document.createElement('small'); who.textContent = (item.name || 'A player') + ' · ' + new Date(item.at).toLocaleDateString();
+      body.append(p, who); row.append(pic, body); list.appendChild(row);
     }
-  }
-  items = items.filter(it => !it.dead);
-
-  for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; p.life -= dt; }
-  particles = particles.filter(p => p.life > 0);
-
-  level = 1 + Math.floor(score / 100);
-  if (lives <= 0) gameOver();
-}
-
-let shake = 0;
-function drawStar(x, y, r, rot, color) {
-  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const rad = i % 2 ? r * 0.45 : r, a = (i * Math.PI) / 5 - Math.PI / 2;
-    ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
-  }
-  ctx.closePath(); ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = 15; ctx.fill();
-  ctx.restore();
-}
-function drawHeart(x, y, r) {
-  ctx.save(); ctx.translate(x, y); ctx.scale(r / 16, r / 16); ctx.beginPath();
-  ctx.moveTo(0, 6); ctx.bezierCurveTo(-16, -6, -8, -18, 0, -8); ctx.bezierCurveTo(8, -18, 16, -6, 0, 6);
-  ctx.fillStyle = '#ff6b9a'; ctx.shadowColor = '#ff6b9a'; ctx.shadowBlur = 12; ctx.fill(); ctx.restore();
-}
-function drawRock(it) {
-  ctx.save(); ctx.translate(it.x, it.y); ctx.rotate(it.spin); ctx.beginPath();
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2, rad = it.r * (0.8 + ((i * 37) % 5) / 20);
-    ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
-  }
-  ctx.closePath(); ctx.fillStyle = '#7d6b5d'; ctx.fill();
-  ctx.strokeStyle = '#4e4238'; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
-}
-
-function draw(t) {
-  ctx.save();
-  if (shake > 0) ctx.translate((Math.random() - 0.5) * 12 * shake, (Math.random() - 0.5) * 12 * shake);
-
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#0b1026'); g.addColorStop(1, '#2a1b5c');
-  ctx.fillStyle = g; ctx.fillRect(-20, -20, W + 40, H + 40);
-
-  for (const s of twinkles) {
-    ctx.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(t / 900 + s.p));
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  if (player) {
-    for (const it of items) {
-      if (it.type === 'star') drawStar(it.x, it.y, it.r, it.spin, '#ffd34d');
-      else if (it.type === 'heart') drawHeart(it.x, it.y, it.r);
-      else drawRock(it);
-    }
-    for (const p of particles) {
-      ctx.globalAlpha = Math.max(p.life / 0.6, 0); ctx.fillStyle = p.color;
-      ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
-    }
-    ctx.globalAlpha = 1;
-
-    // Player basket
-    const { x, y, w, h } = player;
-    ctx.fillStyle = '#7ce0ff'; ctx.shadowColor = '#7ce0ff'; ctx.shadowBlur = 20;
-    ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2, w, h, 10); ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // HUD
-    ctx.fillStyle = '#f4f1ff'; ctx.font = 'bold 22px system-ui, sans-serif'; ctx.textBaseline = 'top';
-    ctx.textAlign = 'left'; ctx.fillText(`Score ${score}`, 16, 16);
-    ctx.font = '16px system-ui, sans-serif'; ctx.fillText(`Level ${level}   Best ${best}`, 16, 44);
-    ctx.textAlign = 'right'; ctx.font = '22px system-ui, sans-serif';
-    ctx.fillText('❤️'.repeat(Math.max(lives, 0)), W - 16, 16);
-  }
-  ctx.restore();
-}
-
-function showOverlay(title, html, button) {
-  overlay.querySelector('h1').textContent = title;
-  message.innerHTML = html; startBtn.textContent = button;
-  overlay.classList.remove('hidden');
-}
-
-function start() {
-  reset(); state = 'playing'; overlay.classList.add('hidden'); last = performance.now();
-}
-function gameOver() {
-  state = 'over';
-  const newBest = score > best;
-  if (newBest) { best = score; saveBest(best); }
-  showOverlay('Game Over', `You scored <b>${score}</b>${newBest ? ' — a new best! 🎉' : `<br>Best: ${best}`}`, 'Play again');
-}
-function togglePause() {
-  if (state === 'playing') { state = 'paused'; showOverlay('Paused', 'Take a breather.', 'Resume'); }
-  else if (state === 'paused') { state = 'playing'; overlay.classList.add('hidden'); last = performance.now(); }
-}
-
-startBtn.addEventListener('click', () => (state === 'paused' ? togglePause() : start()));
-window.addEventListener('keydown', e => {
-  keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = true;
-  if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') togglePause();
-  if ((e.key === 'Enter' || e.key === ' ') && (state === 'menu' || state === 'over')) start();
-});
-window.addEventListener('keyup', e => { keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = false; });
-canvas.addEventListener('pointermove', e => { pointerX = e.clientX; });
-canvas.addEventListener('pointerdown', e => { pointerX = e.clientX; });
-
-let last = performance.now();
-function loop(t) {
-  const dt = Math.min((t - last) / 1000, 0.05); last = t;
-  if (state === 'playing') update(dt);
-  if (shake > 0) shake -= dt;
-  draw(t);
-  requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
+  };
+  $id('inboxClose').onclick = () => { $id('inboxLayer').hidden = true; };
+})();
 </script>
 </body>
 </html>
