@@ -124,14 +124,19 @@ const EMOTES = {
 };
 const emoteOwned = id => !EMOTES[id].price || owned.includes('emote:' + id);
 let emote = null, emoteT = 0;
-function playEmote(id) { if (emoteOwned(id)) { emote = id; emoteT = 0; } }
+function playEmote(id, tryingOut) { if (tryingOut || emoteOwned(id)) { emote = id; emoteT = 0; } }
 
 // Buying takes two taps so nothing gets bought by accident.
 let pendingBuy = null;
-function buy(key, name, price) {
+// The first tap on something locked lets you try it (wear it, or watch the emote); the second tap buys it.
+function buy(key, name, price, tryIt) {
   if (owned.includes(key)) return true;
-  if (bank < price) { toast(`${name} costs ${price} coins. You have ${bank}. Keep running!`); return false; }
-  if (pendingBuy !== key) { pendingBuy = key; toast(`Tap ${name} again to buy it for ${price} coins.`); renderCustom(); return false; }
+  if (pendingBuy !== key) {
+    pendingBuy = key; tryIt();
+    toast(bank >= price ? `Trying ${name}. Tap it again to buy it for ${price} coins.` : `Trying ${name}. It costs ${price} coins and you have ${bank}.`);
+    renderCustom(); return false;
+  }
+  if (bank < price) { toast(`${name} costs ${price} coins. You have ${bank}. Keep running to collect more!`); return false; }
   pendingBuy = null; bank -= price; owned.push(key); store.set('bank', bank); store.set('owned', owned);
   toast(`You bought ${name}!`); refreshMenu(); return true;
 }
@@ -641,9 +646,9 @@ function buildRunner(c) {
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.12;
   return { root, body, legs, arms, head, cape, shadow, pet, tall: (costume && costume.tall) || 0, dance: !!(costume && costume.dance) };
 }
-function rebuildAvatar() {
+function rebuildAvatar(cfg = avatarCfg) {
   const prev = avatar;
-  avatar = buildAvatar(avatarCfg);
+  avatar = buildAvatar(cfg);
   if (prev) { avatar.root.position.copy(prev.root.position); avatar.root.rotation.copy(prev.root.rotation); scene.remove(prev.root); scene.remove(prev.shadow); }
   scene.add(avatar.root); scene.add(avatar.shadow);
 }
@@ -719,7 +724,7 @@ function toMenu() {
   state = 'menu'; clearThings(); player.lane = 1; player.x = 0; player.y = 0; player.vy = 0; player.roll = 0;
   resetPose(); refreshMenu(); show('#menu');
 }
-function toCustom() { state = 'custom'; clearThings(); resetPose(); renderCustom(); show('#custom'); }
+function toCustom() { pendingBuy = null; state = 'custom'; clearThings(); resetPose(); renderCustom(); show('#custom'); }
 function startRun() {
   ensureAudio();
   state = 'play'; clearThings();
@@ -892,7 +897,7 @@ $('#againBtn').onclick = startRun;
 $('#customBtn').onclick = toCustom;
 $('#overCustomBtn').onclick = toCustom;
 $('#overMenuBtn').onclick = toMenu;
-$('#doneBtn').onclick = toMenu;
+$('#doneBtn').onclick = () => { if (pendingBuy) { pendingBuy = null; rebuildAvatar(); } toMenu(); };
 $('#pauseBtn').onclick = () => state === 'play' ? pause() : resume();
 $('#resumeBtn').onclick = resume;
 $('#quitBtn').onclick = toMenu;
@@ -928,12 +933,12 @@ function renderCustom() {
         value = v; b.className = 'swatch'; b.style.setProperty('--c', v); b.setAttribute('aria-label', `${opt.label} ${v}`);
       } else {
         [value, name, price] = v; locked = !!price && !owned.includes(key + ':' + value);
-        b.className = 'chip' + (locked ? ' locked' : '');
+        b.className = 'chip' + (locked ? ' locked' : '') + (pendingBuy === key + ':' + value ? ' trying' : '');
         b.innerHTML = locked ? `${pendingBuy === key + ':' + value ? 'Tap again to buy' : name} · <span class="coin"></span> ${price}` : name;
       }
       b.setAttribute('aria-pressed', String(avatarCfg[key] === value));
       b.onclick = () => {
-        if (locked && !buy(key + ':' + value, name, price)) return;
+        if (locked && !buy(key + ':' + value, name, price, () => rebuildAvatar({ ...avatarCfg, [key]: value }))) return;
         pendingBuy = null;
         avatarCfg[key] = value; store.set('avatar', avatarCfg); rebuildAvatar(); renderCustom();
       };
@@ -946,10 +951,11 @@ function renderCustom() {
   for (const [id, e] of Object.entries(EMOTES)) {
     const b = document.createElement('button'); b.type = 'button';
     const locked = !emoteOwned(id), key = 'emote:' + id;
-    b.className = 'chip' + (locked ? ' locked' : '');
+    b.className = 'chip' + (locked ? ' locked' : '') + (pendingBuy === key ? ' trying' : '');
     b.innerHTML = locked ? `${pendingBuy === key ? 'Tap again to buy' : e.name} · <span class="coin"></span> ${e.price}` : e.name;
     b.onclick = () => {
-      if (locked && !buy(key, e.name, e.price)) return;
+      if (locked && !buy(key, e.name, e.price, () => playEmote(id, true))) return;
+      if (pendingBuy) rebuildAvatar(); // stop wearing anything being tried on
       pendingBuy = null; playEmote(id); renderCustom();
     };
     fs.lastChild.appendChild(b);

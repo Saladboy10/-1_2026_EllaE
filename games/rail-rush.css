@@ -55,6 +55,7 @@
   .chip { padding: 6px 12px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); font-weight: 800; font-size: .9rem; }
   .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
   .chip.locked { background: var(--mist); }
+  .chip.trying { background: var(--signal); }
   .coin { display: inline-block; width: .9em; height: .9em; border-radius: 50%; background: var(--signal);
     border: 2px solid var(--ink); vertical-align: -0.12em; }
   .bank { font-family: var(--display); font-size: 1.1rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
