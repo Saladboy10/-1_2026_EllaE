@@ -8,7 +8,7 @@ const store = {
 // ---------- Avatar options ----------
 const CLOTHES = ['#ff4f7b', '#ffcf1a', '#33c27a', '#2f80ff', '#8a5cff', '#ff8a2a', '#00c2c7', '#1b1530', '#ffffff', '#7a8394'];
 const OPTIONS = {
-  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 50], ['silver', 'Quills', 50], ['gown', 'Big Bertha', 100], ['beehive', 'Marge Simpson', 100], ['merc', 'Red Renaldo', 100], ['straw', 'Straw Hat', 100], ['swords', 'Three Swords', 100]] },
+  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 50], ['silver', 'Quills', 50], ['gown', 'Big Bertha', 100], ['beehive', 'Marge Simpson', 100], ['merc', 'Red Renaldo', 100], ['straw', 'Straw Hat', 100], ['swords', 'Three Swords', 100], ['deku', 'Deku', 100], ['denki', 'Denki', 100], ['uraraka', 'Uraraka', 100], ['allmight', 'All Might', 100]] },
   skin:      { label: 'Skin', type: 'color', values: ['#ffdbc2', '#f1c19b', '#d9a07a', '#b97850', '#8d5534', '#5c3720'] },
   hair:      { label: 'Hair', type: 'style', values: [['none', 'None'], ['short', 'Short'], ['spiky', 'Spiky'], ['long', 'Long'], ['bun', 'Bun'], ['mohawk', 'Mohawk']] },
   hairColor: { label: 'Hair color', type: 'color', values: ['#1c1410', '#5a3a22', '#a8642c', '#e8c46a', '#e2e2e2', '#ff5fa2', '#3fa9ff', '#5cd65c'] },
@@ -383,7 +383,85 @@ function tube(rTop, rBottom, h, color, x, y, z, parent) {
   const m = new THREE.Mesh(geo('CylinderGeometry', rTop, rBottom, h, 24), mat(color));
   m.position.set(x, y, z); parent.add(m); return m;
 }
+// Freckles or blush on both cheeks.
+function cheeks(head, color, freckles) {
+  for (const s of [-1, 1]) {
+    if (freckles) for (const [dx, dy] of [[0, 0], [0.03, -0.02], [-0.025, -0.025]]) ball(0.009, color, s * (0.15 + dx), 0.215 + dy, -0.27, head, 1, 1, 0.5);
+    else ball(0.04, color, s * 0.16, 0.22, -0.262, head, 1.3, 0.7, 0.3).userData.noLine = true;
+  }
+}
+// Messy hair: a cap with short locks sticking out all over and bangs in front.
+function messyHair(head, color, len = 0.18, bangs = 0.16) {
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  ball(0.29, color, 0, 0.43, 0.06, head);
+  for (let ring = 0; ring < 3; ring++) {
+    const n = [6, 9, 10][ring], up = [0.85, 0.45, 0.05][ring];
+    for (let i = 0; i < n; i++) {
+      const a = (i + ring * 0.5) / n * Math.PI * 2, dir = V(Math.sin(a), up, Math.cos(a));
+      if (ring === 2 && Math.cos(a) < -0.3) continue; // keep the face clear
+      strand(head, color, V(0, 0.42, 0.06).addScaledVector(dir.clone().normalize(), 0.26), dir, 0.08, len);
+    }
+  }
+  for (const x of [-0.16, -0.05, 0.06, 0.16]) strand(head, color, V(x, 0.56, -0.2), V(x * 1.2, -1, -0.45), 0.065, bangs);
+}
 const COSTUMES = {
+  deku: {
+    eyes: '#2f9e5a', brows: '#173d2e',
+    parts: { skin: '#f3c9a6', shirt: '#2b6e55', sleeve: '#2b6e55', hand: '#f4f4f4', pants: '#2b6e55', shoes: '#d42a2a' },
+    decorate({ head, body, legs, Y }) {
+      messyHair(head, '#1f4d3a', 0.2, 0.17);
+      cheeks(head, '#a8642c', true);
+      box(0.78, 0.09, 0.44, '#1b1b1b', 0, Y(0.98), 0, body);                       // belt
+      for (const s of [-1, 1]) box(0.13, 0.14, 0.09, '#1b1b1b', s * 0.26, Y(0.98), -0.24, body);
+      box(0.3, 0.3, 0.05, '#1f5442', 0, Y(1.36), -0.2, body).userData.noLine = true; // darker chest panel
+      for (const leg of legs) box(0.26, 0.12, 0.26, '#1b1b1b', 0, -0.4, -0.02, leg); // knee pads
+    },
+  },
+  denki: {
+    eyes: '#e0b020', brows: '#c9a43a', mouth: 'smirk',
+    parts: { skin: '#f3c9a6', shirt: '#1b1b1b', sleeve: '#1b1b1b', hand: '#f3c9a6', pants: '#1b1b1b', shoes: '#1b1b1b' },
+    decorate({ head, body, Y }) {
+      const gold = '#f2d250';
+      messyHair(head, gold, 0.24, 0.18);
+      [[-0.2, 0.62, 0.5], [-0.16, 0.55, -0.5], [-0.2, 0.48, 0.5]].forEach(([x, y, r]) => {     // black lightning streak
+        const b = box(0.1, 0.035, 0.03, '#1b1b1b', x, y, -0.25, head); b.rotation.z = r; b.userData.free = true;
+      });
+      box(0.06, 0.08, 0.06, '#f2d250', -0.29, 0.25, 0, head);                                  // earpiece
+      [[0.12, 1.45, -0.7], [0.04, 1.33, 0.7], [0.12, 1.2, -0.7]].forEach(([x, y, r]) => {        // white lightning on the jacket
+        box(0.2, 0.05, 0.02, '#ffffff', x - 0.06, Y(y), -0.215, body).rotation.z = r;
+      });
+    },
+  },
+  uraraka: {
+    eyes: '#7a4a2a', brows: '#4a2a18',
+    parts: { skin: '#f6d2b8', shirt: '#1b1b1b', sleeve: '#f28ab0', hand: '#f6f6f6', pants: '#1b1b1b', shoes: '#f28ab0' },
+    decorate({ head, body, arms, legs, Y }) {
+      const brown = '#5a3320', V = (x, y, z) => new THREE.Vector3(x, y, z);
+      ball(0.29, brown, 0, 0.43, 0.06, head);
+      for (const [x, tilt] of [[-0.17, -0.3], [-0.06, -0.1], [0.05, 0.1], [0.16, 0.3]]) strand(head, brown, V(x, 0.56, -0.2), V(tilt, -1, -0.4), 0.075, 0.24);
+      for (const s of [-1, 1]) { strand(head, brown, V(s * 0.25, 0.45, -0.08), V(s * 0.1, -1, -0.15), 0.08, 0.36); strand(head, brown, V(s * 0.2, 0.4, 0.16), V(s * 0.15, -1, 0.2), 0.11, 0.3); }
+      cheeks(head, '#f28ab0', false);
+      box(0.5, 0.3, 0.05, '#f28ab0', 0, Y(1.36), -0.2, body).userData.noLine = true;  // pink chest panel
+      box(0.78, 0.08, 0.44, '#f28ab0', 0, Y(0.98), 0, body);
+      for (const arm of arms) box(0.2, 0.08, 0.2, '#f28ab0', 0, -0.58, 0, arm);        // wrist pads
+      for (const leg of legs) box(0.24, 0.2, 0.24, '#f28ab0', 0, -0.62, 0, leg);       // tall boots
+    },
+  },
+  allmight: {
+    eyes: '#3a6fd8', brows: '#c9a43a', mouth: 'grin', scale: 1.18,
+    parts: { skin: '#f3c9a6', shirt: '#2f5bd6', sleeve: '#2f5bd6', hand: '#f2c230', pants: '#2f5bd6', shoes: '#d42a2a' },
+    decorate({ head, body, legs, Y }) {
+      const gold = '#f2d250', V = (x, y, z) => new THREE.Vector3(x, y, z);
+      ball(0.29, gold, 0, 0.43, 0.06, head);
+      for (const s of [-1, 1]) strand(head, gold, V(s * 0.06, 0.56, -0.17), V(s * 0.35, 1, 0.25), 0.075, 0.5);   // the two famous spikes
+      for (const [x, z] of [[-0.24, 0.1], [0.24, 0.1], [-0.14, 0.24], [0.14, 0.24], [0, 0.27]]) strand(head, gold, V(x, 0.4, z), V(x, -0.4, 1), 0.08, 0.22);
+      for (const s of [-1, 1]) ball(0.17, '#2f5bd6', s * 0.42, Y(1.45), 0, body);       // big shoulders
+      box(0.66, 0.08, 0.44, '#ffffff', 0, Y(1.42), 0, body);                             // red and white chest stripes
+      box(0.66, 0.08, 0.44, '#d42a2a', 0, Y(1.33), 0, body);
+      box(0.78, 0.1, 0.44, '#f2c230', 0, Y(0.98), 0, body);                              // yellow belt
+      for (const leg of legs) box(0.24, 0.24, 0.24, '#d42a2a', 0, -0.62, 0, leg);        // red boots
+    },
+  },
   straw: {
     eyes: '#1c1410', brows: '#1c1410', mouth: 'shout',
     parts: { skin: '#f1c19b', shirt: '#d42a2a', sleeve: '#f1c19b', hand: '#f1c19b', pants: '#3a6fd8', shin: '#f1c19b', shoes: '#c8a060' },
@@ -633,6 +711,7 @@ function buildRunner(c) {
   let cape = null;
   if (costume) {
     costume.decorate({ head, body, arms, legs, Y });
+    if (costume.scale) root.scale.setScalar(costume.scale);
     for (const [groups, cut] of [[arms, -0.34], [legs, -0.4]]) for (const g of groups) {
       const joint = g.elbow || g.knee;
       for (const part of [...g.children]) if (part !== joint && part.position.y < cut) { part.position.y -= joint.position.y; joint.add(part); }
@@ -686,7 +765,7 @@ function buildRunner(c) {
     part.position.z = z + 0.27 - Math.sqrt(Math.max(0, r * r - x * x));
   }
   const pet = buildPet(c.pet);
-  if (pet) root.add(pet.group);
+  if (pet) { root.add(pet.group); pet.group.scale.setScalar(1 / root.scale.x); }
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.55, 20), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.25 }));
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.12;
   return { root, body, legs, arms, head, cape, shadow, pet, tall: (costume && costume.tall) || 0, dance: !!(costume && costume.dance) };
