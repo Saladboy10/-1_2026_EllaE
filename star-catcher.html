@@ -18,6 +18,7 @@
   button { margin-top: 1em; font: inherit; font-size: 1.2rem; padding: .7em 2em; border: 0; border-radius: 999px;
     background: var(--accent); color: #1a1440; font-weight: 700; cursor: pointer; }
   button:hover { filter: brightness(1.1); }
+  #lobby { margin-top: 1.2em; color: var(--fg); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -27,6 +28,7 @@
   <p id="message">Catch the falling stars ⭐ and dodge the rocks 🪨.<br>
     Move with <b>← →</b> / <b>A D</b>, the mouse, or your finger. Press <b>P</b> to pause.</p>
   <button id="start">Play</button>
+  <a id="lobby" href="index.html">← Back to lobby</a>
 </div>
 <script>
 const canvas = document.getElementById('game');

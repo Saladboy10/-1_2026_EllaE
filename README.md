@@ -1,8 +1,13 @@
 # Games
 
-Open any of these files in a web browser to play. No install needed.
+Open `index.html` in a web browser for the **Game Lobby**, then pick a game. No install needed.
+Each game has a button to get back to the lobby.
 
-## Rail Rush (`index.html`)
+## Adding a new game
+1. Put the game in its own file, like `my-game.html`, with a link back to `index.html`.
+2. In `index.html`, swap one of the "Coming soon" slots for a game card that links to it, with a picture in `assets/`.
+
+## Rail Rush (`rail-rush.html`)
 A 3D endless runner. Dodge trains and barriers across three tracks, grab coins, and see how far you get.
 
 - **Move:** ← → (or A / D), or swipe left/right
