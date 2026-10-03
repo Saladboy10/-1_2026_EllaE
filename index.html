@@ -37,8 +37,14 @@
     border-radius: 999px; background: var(--mist); border: 2px solid var(--ink); font-variant-numeric: tabular-nums; }
   #lobby .pill.best { background: var(--signal); }
   #lobby .top { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-variant-numeric: tabular-nums; }
-  #lobby .top-title { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
-  #lobby .top li { display: grid; grid-template-columns: 1.6em minmax(0, 1fr) auto; gap: 8px; padding: 3px 10px; border-radius: 10px; background: var(--mist); }
+  #lobby .leaders { display: flex; flex-direction: column; gap: 6px; border-top: 2px dashed var(--ink); padding-top: 12px; }
+  #lobby .leaders h4 { font-family: var(--display); font-weight: 400; font-size: 1.05rem; margin: 0; }
+  #lobby .leaders-head, #lobby .top li { display: grid; grid-template-columns: 4em minmax(0, 1fr) auto; gap: 8px; padding: 3px 10px; }
+  #lobby .leaders-head { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; opacity: .7; }
+  #lobby .top li { border-radius: 10px; background: var(--mist); }
+  #lobby .top li:nth-child(-n+3) { font-weight: 800; }
+  #lobby .top .pts { font-family: var(--display); }
+  #lobby .leaders-note { margin: 0; font-size: .9rem; opacity: .75; }
   #lobby .top li.me { background: var(--signal); font-weight: 800; }
   #lobby .top .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #lobby .play { margin-top: auto; display: block; width: 100%; text-align: center; color: var(--ink);
@@ -143,11 +149,13 @@
             <span class="pill">3D runner</span>
             <span class="pill best" id="best-railrush" hidden></span>
           </div>
-          <div id="top-railrush" hidden>
-            <span class="top-title">Top runners</span>
-            <ol class="top"></ol>
-          </div>
           <button class="play" type="button" data-game="railrush">Play</button>
+          <div class="leaders" id="top-railrush">
+            <h4>Leaderboard · Top 20</h4>
+            <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
+            <ol class="top"></ol>
+            <p class="leaders-note">Loading scores…</p>
+          </div>
         </div>
       </article>
     </div>
@@ -184,15 +192,18 @@
   };
   for (const btn of document.querySelectorAll('#lobby [data-game]')) btn.onclick = () => Lobby.open(btn.dataset.game);
 
-  // Top three on each game's card, live.
-  Leaderboard.watch('railrush', 3, rows => {
-    const box = document.getElementById('top-railrush'), list = box.querySelector('ol');
-    box.hidden = !rows || !rows.length;
-    if (box.hidden) return;
+  // Top 20 under each game's card, live.
+  const place = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+  Leaderboard.watch('railrush', 20, rows => {
+    const box = document.getElementById('top-railrush'), list = box.querySelector('ol'), note = box.querySelector('.leaders-note');
     list.innerHTML = '';
+    note.hidden = !!(rows && rows.length);
+    note.textContent = !rows ? 'The leaderboard shows up in the published game.' : 'No scores yet. Play a run to get on the board!';
+    box.querySelector('.leaders-head').hidden = !(rows && rows.length);
+    if (!rows) return;
     rows.forEach((row, i) => {
       const li = document.createElement('li'); if (row.me) li.className = 'me';
-      for (const [cls, text] of [['rank', i + 1], ['name', row.name || 'Mystery Runner'], ['pts', row.score]]) {
+      for (const [cls, text] of [['rank', place(i + 1)], ['name', row.name || 'Mystery Runner'], ['pts', row.score]]) {
         const span = document.createElement('span'); span.className = cls; span.textContent = text; li.appendChild(span);
       }
       list.appendChild(li);
