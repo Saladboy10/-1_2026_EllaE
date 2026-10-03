@@ -65,6 +65,15 @@ const EMOTES = {
     a.arms[1].rotation.z = 2.3 * k; a.arms[0].rotation.x = 1.7 * k; a.arms[0].rotation.z = 1.0 * k;
     a.head.rotation.x = -0.35 * k; a.head.rotation.z = 0.35 * k; a.body.rotation.z = -0.1 * k;
   } },
+  duggee: { name: 'The Duggee', dur: 3.4, price: 50, pose(a, t, d) {
+    const k = ramp(t, d), b = t * 6, sw = Math.sin(b);
+    a.body.rotation.x = 0.14 * k; a.body.rotation.z = sw * 0.18 * k;
+    a.body.position.y = 0.95 - Math.abs(sw) * 0.08 * k;
+    a.arms[1].rotation.z = k * (3.3 + sw * 0.25); a.arms[1].rotation.x = k * (0.25 + sw * 0.2);
+    a.arms[0].rotation.z = -k * (0.5 + sw * 0.3); a.arms[0].rotation.x = k * Math.cos(b) * 0.6;
+    a.legs.forEach((l, i) => { l.rotation.x = Math.max(0, Math.sin(b + i * Math.PI)) * 0.4 * k; });
+    a.head.rotation.z = -sw * 0.15 * k; a.head.rotation.x = 0.1 * k;
+  } },
 };
 const emoteOwned = id => !EMOTES[id].price || owned.includes('emote:' + id);
 let emote = null, emoteT = 0;
@@ -682,7 +691,7 @@ window.addEventListener('keydown', e => {
   else if (['arrowdown', 's'].includes(k)) roll();
   else if (k === 'p' || k === 'escape') state === 'play' ? pause() : resume();
   else if (k === 'enter' && (state === 'menu' || state === 'over')) startRun();
-  else if (/^[1-6]$/.test(k) && (state === 'menu' || state === 'custom')) playEmote(Object.keys(EMOTES)[+k - 1]);
+  else if (/^[1-9]$/.test(k) && Object.keys(EMOTES)[+k - 1] && (state === 'menu' || state === 'custom')) playEmote(Object.keys(EMOTES)[+k - 1]);
 });
 let touchStart = null;
 const app = $('#app');
