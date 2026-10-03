@@ -12,6 +12,7 @@ const OPTIONS = {
   skin:      { label: 'Skin', type: 'color', values: ['#ffdbc2', '#f1c19b', '#d9a07a', '#b97850', '#8d5534', '#5c3720'] },
   hair:      { label: 'Hair', type: 'style', values: [['none', 'None'], ['short', 'Short'], ['spiky', 'Spiky'], ['long', 'Long'], ['bun', 'Bun'], ['mohawk', 'Mohawk']] },
   hairColor: { label: 'Hair color', type: 'color', values: ['#1c1410', '#5a3a22', '#a8642c', '#e8c46a', '#e2e2e2', '#ff5fa2', '#3fa9ff', '#5cd65c'] },
+  eyes:      { label: 'Eyes', type: 'color', values: ['#7a3b2e', '#c2264f', '#3a6fd8', '#2f9e5a', '#8a5cff', '#e0b020', '#5a3a22', '#1c1410'] },
   shirt:     { label: 'Top', type: 'color', values: CLOTHES },
   pants:     { label: 'Pants', type: 'color', values: CLOTHES },
   shoes:     { label: 'Shoes', type: 'color', values: CLOTHES },
@@ -20,7 +21,7 @@ const OPTIONS = {
   extra:     { label: 'Extra', type: 'style', values: [['none', 'None'], ['glasses', 'Glasses'], ['backpack', 'Backpack'], ['cape', 'Cape', 100]] },
   pet:       { label: 'Pet', type: 'style', values: [['none', 'None'], ['pup', 'Milo', 50], ['fox', 'Tails', 50]] },
 };
-const DEFAULT_AVATAR = { outfit: 'custom', pet: 'none', skin: '#f1c19b', hair: 'short', hairColor: '#5a3a22', shirt: '#ff4f7b', pants: '#2f80ff',
+const DEFAULT_AVATAR = { outfit: 'custom', pet: 'none', eyes: '#7a3b2e', skin: '#f1c19b', hair: 'short', hairColor: '#5a3a22', shirt: '#ff4f7b', pants: '#2f80ff',
   shoes: '#ffffff', hat: 'cap', hatColor: '#ffcf1a', extra: 'backpack' };
 
 let runnerName = store.get('name', '');
@@ -154,8 +155,13 @@ const sun = new THREE.DirectionalLight('#ffffff', 0.75); sun.position.set(6, 12,
 const matCache = {}, geoCache = {};
 // While roundK > 0 (building a character), boxes come out with soft rounded edges and smooth shading.
 let roundK = 0;
+// Characters use anime-style toon shading: flat color with one crisp shadow band.
+const toonRamp = (() => {
+  const t = new THREE.DataTexture(new Uint8Array([110, 190, 255]), 3, 1, THREE.LuminanceFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t;
+})();
 const mat = (c, opts) => {
-  if (roundK && !opts) return matCache['soft' + c] || (matCache['soft' + c] = new THREE.MeshPhongMaterial({ color: c, shininess: 18, specular: '#2a2a2a' }));
+  if (roundK && !opts) return matCache['toon' + c] || (matCache['toon' + c] = new THREE.MeshToonMaterial({ color: c, gradientMap: toonRamp }));
   const key = c + (opts ? JSON.stringify(opts) : '');
   return matCache[key] || (matCache[key] = new THREE.MeshLambertMaterial({ color: c, ...opts }));
 };
@@ -252,6 +258,27 @@ function ball(r, color, x, y, z, parent, sx = 1, sy = 1, sz = 1) {
   const m = new THREE.Mesh(geo('SphereGeometry', r, 20, 14), mat(color));
   m.position.set(x, y, z); m.scale.set(sx, sy, sz); parent.add(m); return m;
 }
+// Big anime spikes bursting out of a cap of hair, with bangs over the forehead.
+function animeSpikes(head, color) {
+  ball(0.31, color, 0, 0.4, 0.03, head, 1, 0.95, 1);
+  const up = new THREE.Vector3(0, 1, 0), center = new THREE.Vector3(0, 0.36, 0.04);
+  const spike = (dir, r, len, from) => {
+    dir.normalize();
+    const m = new THREE.Mesh(geo('ConeGeometry', r, len, 10), mat(color));
+    m.quaternion.setFromUnitVectors(up, dir);
+    m.position.copy(from || center.clone().addScaledVector(dir, 0.27)).addScaledVector(dir, len / 2);
+    head.add(m);
+  };
+  spike(new THREE.Vector3(0, 1, 0.1), 0.12, 0.42);
+  for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + 0.3; spike(new THREE.Vector3(Math.sin(a) * 0.75, 0.75, Math.cos(a) * 0.75), 0.12, 0.42); }
+  for (let i = 0; i < 9; i++) {
+    const a = i / 9 * Math.PI * 2;
+    if (Math.cos(a) < -0.5) continue; // keep the face clear
+    spike(new THREE.Vector3(Math.sin(a), 0.25, Math.cos(a)), 0.11, 0.36);
+  }
+  for (const x of [-0.17, -0.06, 0.06, 0.17]) spike(new THREE.Vector3(x * 1.5, -0.9, -0.45), 0.065, 0.2, new THREE.Vector3(x, 0.6, -0.22));
+}
+
 // A rounded tube from y=top down to y=bottom inside its parent.
 function limb(rTop, rBottom, top, bottom, color, parent) {
   const m = new THREE.Mesh(geo('CylinderGeometry', rTop, rBottom, top - bottom, 16), mat(color));
@@ -304,6 +331,7 @@ const COSTUMES = {
     },
   },
   gown: {
+    eyes: '#5a3a22', brows: '#16100c',
     parts: { skin: '#8a5a3c', shirt: '#f2b53a', sleeve: '#8a5a3c', hand: '#f2b53a', pants: '#8a5a3c', shoes: '#f2b53a' },
     decorate({ head, body, arms, Y }) {
       const G = '#f2b53a', L = '#f8cd6a', H = '#16100c', GOLD = '#e0b030';
@@ -415,7 +443,23 @@ function buildPet(type) {
 
 function buildAvatar(c) {
   roundK = 0.8;
-  try { return buildRunner(c); } finally { roundK = 0; }
+  try { const rig = buildRunner(c); addOutlines(rig.root); return rig; } finally { roundK = 0; }
+}
+// Ink outlines like an anime drawing: a slightly puffed-out, inside-out copy of each part, drawn dark.
+const outlineMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  vertexShader: 'void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position + normal * 0.014, 1.0); }',
+  fragmentShader: 'void main() { gl_FragColor = vec4(0.09, 0.07, 0.14, 1.0); }',
+});
+function addOutlines(root) {
+  const parts = [];
+  root.traverse(o => { if (o.isMesh && !o.userData.outline) parts.push(o); });
+  for (const part of parts) {
+    if (!part.geometry.boundingSphere) part.geometry.computeBoundingSphere();
+    const size = part.geometry.boundingSphere.radius * Math.max(part.scale.x, part.scale.y, part.scale.z);
+    if (size < 0.05) continue; // faces, buttons and other tiny details stay unlined
+    const line = new THREE.Mesh(part.geometry, outlineMat); line.userData.outline = true; part.add(line);
+  }
 }
 function buildRunner(c) {
   const costume = COSTUMES[c.outfit];
@@ -453,12 +497,19 @@ function buildRunner(c) {
   const head = new THREE.Group(); head.position.y = Y(1.64); head.scale.setScalar(0.84); body.add(head);
   box(0.54, 0.56, 0.54, P.skin, 0, 0.29, 0, head);
   if (!costume || costume.face !== false) {
+    // Anime face: big shiny eyes with lashes, sharp brows, a small nose and mouth.
+    const iris = (costume && costume.eyes) || c.eyes || '#7a3b2e', brow = (costume && costume.brows) || c.hairColor || '#1b1530';
     for (const s of [-1, 1]) {
-      box(0.08, 0.1, 0.02, '#1b1530', s * 0.12, 0.33, -0.275, head);
+      ball(0.078, '#ffffff', s * 0.12, 0.3, -0.25, head, 1, 1.3, 0.35);
+      ball(0.054, iris, s * 0.12, 0.29, -0.272, head, 0.9, 1.25, 0.3);
+      ball(0.03, '#120d18', s * 0.12, 0.29, -0.285, head, 0.9, 1.2, 0.3);
+      ball(0.018, '#ffffff', s * 0.135, 0.32, -0.295, head, 1, 1, 0.4);
+      box(0.18, 0.032, 0.03, '#120d18', s * 0.125, 0.39, -0.268, head).rotation.z = -s * 0.12;
+      box(0.15, 0.03, 0.03, brow, s * 0.12, 0.455, -0.262, head).rotation.z = s * 0.24;
       ball(0.06, P.skin, s * 0.28, 0.27, 0.02, head, 0.5, 1, 0.8);
     }
-    box(0.07, 0.1, 0.07, P.skin, 0, 0.24, -0.29, head);
-    box(0.16, 0.035, 0.02, '#8a2f3a', 0, 0.13, -0.275, head);
+    box(0.03, 0.07, 0.04, P.skin, 0, 0.2, -0.285, head);
+    box(0.13, 0.018, 0.02, '#8a2f3a', 0, 0.11, -0.274, head);
   }
 
   let cape = null;
@@ -484,12 +535,7 @@ function buildRunner(c) {
     }
     const hatted = c.hat !== 'none' && c.hat !== 'headphones';
     if (c.hair === 'spiky' || (c.hair === 'mohawk' && hatted)) box(0.56, 0.08, 0.56, hc, 0, 0.58, 0, head);
-    if (c.hair === 'spiky' && !hatted) {
-      const cone = new THREE.ConeGeometry(0.13, 0.32, 4);
-      for (const [x, z] of [[-0.16, -0.12], [0.16, -0.12], [0, 0], [-0.16, 0.16], [0.16, 0.16]]) {
-        const m = new THREE.Mesh(cone, mat(hc)); m.position.set(x, 0.75, z); head.add(m);
-      }
-    }
+    if (c.hair === 'spiky' && !hatted) animeSpikes(head, hc);
     if (c.hair === 'mohawk' && !hatted) box(0.12, 0.26, 0.56, hc, 0, 0.68, 0.02, head);
   
     const hat = c.hatColor;
