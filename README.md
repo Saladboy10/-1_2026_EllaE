@@ -65,7 +65,7 @@ A hungry cartoon boy with a huge mouth. Move him under the falling burgers and h
 
 ## Glow Squares
 You and 11 computer players (all Dodge and Weave characters, you in your own look) on a floating floor of squares.
-Each round some squares glow; get onto one before the countdown ends, because the dark squares drop away and anyone on them falls out. Normally 2 fit on one square; every 3rd round is a special round where it changes to 1, 3 or 4 (the squares show it, e.g. 1/3). The last to squeeze onto a full square falls too.
+Each round some squares glow; get onto one before the countdown ends, because the dark squares drop away and anyone on them falls out. Normally 2 fit on one square; every 2 or 3 rounds is a special round where it changes to 1, 3 or 4 (the squares show it, e.g. 1/3). The last to squeeze onto a full square falls too.
 Fewer squares glow each round and players bump each other. Last one standing wins (or survive all 15 rounds).
 
 - **Move:** WASD or the arrow keys, or drag your finger anywhere (a joystick appears under it).

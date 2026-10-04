@@ -1,6 +1,6 @@
 // Glow Squares: you and 11 computer players stand on a floor of squares. Each round some squares
 // glow; when the countdown hits zero the dark squares drop away and anyone not on a glowing square
-// falls out. Normally 2 fit on a square; every 3rd round is a special round where the number changes
+// falls out. Normally 2 fit on a square; every 2 or 3 rounds is a special round where the number changes
 // (1, 3 or 4). The squares show it, and the last to arrive on a full square falls too.
 // There's always one spot too few, players bump each other, and the last one standing wins.
 // Loaded by index.html after rail-rush.js: everyone is a Dodge and Weave character (buildAvatar),
@@ -23,7 +23,7 @@
   let renderer, scene, camera, tiles = [], people = [], me = null;
   let active = false, state = 'menu', last = 0, best = store.get('best', 0);
   // Round phases: 'rest' (squares all normal) -> 'glow' (countdown) -> 'drop' (dark squares fall) -> 'rest'...
-  let phase = 'rest', phaseT = 0, round = 0, glowColor = GLOWS[0], survived = 0, clock = 0, roundCap = 2;
+  let phase = 'rest', phaseT = 0, round = 0, glowColor = GLOWS[0], survived = 0, clock = 0, roundCap = 2, nextSpecial = 2;
   const input = { x: 0, y: 0 }, keys = {};
 
   // ---------- Shared with Dodge and Weave ----------
@@ -132,8 +132,9 @@
   };
   // How many fit on one square, and how many squares glow: always fewer spots than players.
   const capacity = () => roundCap;
-  // How many fit on a square this round: 2, except every 3rd round is special (1, 3 or 4).
-  const special = () => round % 3 === 0;
+  // How many fit on a square this round: 2, except every 2 or 3 rounds (you never know which) is special: 1, 3 or 4.
+  let isSpecial = false;
+  const special = () => isSpecial;
   function pickCapacity() {
     const n = alive().length;
     if (n <= 2) return 1;
@@ -145,7 +146,9 @@
   const onTile = t => people.filter(q => q.alive && q.tile === t);
   const countdown = () => Math.max(2, 4.5 - round * 0.25);
   function startGlow() {
-    round++; phase = 'glow'; phaseT = countdown(); roundCap = pickCapacity();
+    round++; phase = 'glow'; phaseT = countdown();
+    isSpecial = round === nextSpecial; if (isSpecial) nextSpecial = round + 2 + Math.floor(Math.random() * 2);
+    roundCap = pickCapacity();
     glowColor = GLOWS[round % GLOWS.length];
     const pool = [...tiles].sort(() => Math.random() - 0.5).slice(0, glowCount());
     for (const t of pool) t.glow = true;
@@ -294,7 +297,7 @@
   }
   function reset() {
     for (const t of tiles) { t.glow = false; t.y = -0.25; t.vy = 0; }
-    makePeople(); round = 0; survived = 0; phase = 'rest'; phaseT = 2; clock = 0;
+    makePeople(); round = 0; survived = 0; phase = 'rest'; phaseT = 2; clock = 0; nextSpecial = 2; isSpecial = false;
   }
   function toMenu() { state = 'menu'; reset(); $('gsBest').textContent = best; $('gsBank').textContent = bankNow(); show('gsMenu'); }
   function start() { reset(); state = 'play'; show(null); $('gsRound').textContent = 'Get ready!'; }
