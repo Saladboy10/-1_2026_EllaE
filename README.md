@@ -43,7 +43,7 @@ A 3D endless runner. Dodge trains and barriers across three tracks, grab coins, 
 
 **Customize avatar** lets you type your runner's name (it floats above them and shows on the score screen) and pick a ready-made outfit or build your own look:
 
-- **Outfits** (bought with coins): Alina 105 (dances on the menu), Quills 105, Big Bertha 155, Marge Simpson 155, Red Renaldo 155, Luffy 155, Zoro 155, Deku 155, Denki 155, Uraraka 155, All Might 155, Shoto 155, Aizawa 155, Messi 105. Your own name stays the same whatever you wear.
+- **Outfits** (bought with coins): Alina 105 (dances on the menu), Quills 105, Big Bertha 300, Marge Simpson 300, Red Renaldo 300, Luffy 300, Zoro 300, Deku 300, Denki 300, Uraraka 300, All Might 300, Shoto 300, Aizawa 300, Messi 105. Your own name stays the same whatever you wear.
 - **Emotes:** Wave, Dance and Floss are free; Spin 105, Jump for Joy 130, Dab 155, and The Duggee, Moonwalk, The Worm, Ransom and I Want It That Way 105 each. Play them from the menu, the avatar maker, or number keys. Tap anything locked once to try it on (or watch the emote) before buying; tap it again to buy.
 - **My own:** skin, hair, eye color, expression (Normal, Happy, Angry, Sad, Surprised, Wink, Cool), mouth (Smile, Big grin, Gritted teeth, Smirk, Shout, Surprised, Frown, Tongue out, Straight), clothes, hats and extras. Outfits with a visible face also let you pick the expression and mouth. Coins you collect are saved and can unlock the Crown (205) and the Cape (155).
 - **Pets** that run beside you (bought with coins): Milo 105, Tails 105, Ember the dragon 130

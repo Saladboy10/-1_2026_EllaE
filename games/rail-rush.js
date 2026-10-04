@@ -8,7 +8,7 @@ const store = {
 // ---------- Avatar options ----------
 const CLOTHES = ['#ff4f7b', '#ffcf1a', '#33c27a', '#2f80ff', '#8a5cff', '#ff8a2a', '#00c2c7', '#1b1530', '#ffffff', '#7a8394'];
 const OPTIONS = {
-  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 105], ['silver', 'Quills', 105], ['gown', 'Big Bertha', 155], ['beehive', 'Marge Simpson', 155], ['merc', 'Red Renaldo', 155], ['straw', 'Luffy', 155], ['swords', 'Zoro', 155], ['deku', 'Deku', 155], ['denki', 'Denki', 155], ['uraraka', 'Uraraka', 155], ['allmight', 'All Might', 155], ['shoto', 'Shoto', 155], ['aizawa', 'Aizawa', 155], ['messi', 'Messi', 105]] },
+  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 105], ['silver', 'Quills', 105], ['gown', 'Big Bertha', 300], ['beehive', 'Marge Simpson', 300], ['merc', 'Red Renaldo', 300], ['straw', 'Luffy', 300], ['swords', 'Zoro', 300], ['deku', 'Deku', 300], ['denki', 'Denki', 300], ['uraraka', 'Uraraka', 300], ['allmight', 'All Might', 300], ['shoto', 'Shoto', 300], ['aizawa', 'Aizawa', 300], ['messi', 'Messi', 105]] },
   skin:      { label: 'Skin', type: 'color', values: ['#ffdbc2', '#f1c19b', '#d9a07a', '#b97850', '#8d5534', '#5c3720'] },
   hair:      { label: 'Hair', type: 'style', values: [['none', 'None'], ['short', 'Short'], ['spiky', 'Spiky'], ['long', 'Long'], ['bun', 'Bun'], ['mohawk', 'Mohawk']] },
   hairColor: { label: 'Hair color', type: 'color', values: ['#1c1410', '#5a3a22', '#a8642c', '#e8c46a', '#e2e2e2', '#ff5fa2', '#3fa9ff', '#5cd65c'] },
