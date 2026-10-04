@@ -8,7 +8,7 @@ const store = {
 // ---------- Avatar options ----------
 const CLOTHES = ['#ff4f7b', '#ffcf1a', '#33c27a', '#2f80ff', '#8a5cff', '#ff8a2a', '#00c2c7', '#1b1530', '#ffffff', '#7a8394'];
 const OPTIONS = {
-  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 50], ['silver', 'Quills', 50], ['gown', 'Big Bertha', 100], ['beehive', 'Marge Simpson', 100], ['merc', 'Red Renaldo', 100], ['straw', 'Luffy', 100], ['swords', 'Zoro', 100], ['deku', 'Deku', 100], ['denki', 'Denki', 100], ['uraraka', 'Uraraka', 100], ['allmight', 'All Might', 100], ['shoto', 'Shoto', 100], ['aizawa', 'Aizawa', 100]] },
+  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 50], ['silver', 'Quills', 50], ['gown', 'Big Bertha', 100], ['beehive', 'Marge Simpson', 100], ['merc', 'Red Renaldo', 100], ['straw', 'Luffy', 100], ['swords', 'Zoro', 100], ['deku', 'Deku', 100], ['denki', 'Denki', 100], ['uraraka', 'Uraraka', 100], ['allmight', 'All Might', 100], ['shoto', 'Shoto', 100], ['aizawa', 'Aizawa', 100], ['messi', 'Messi', 100]] },
   skin:      { label: 'Skin', type: 'color', values: ['#ffdbc2', '#f1c19b', '#d9a07a', '#b97850', '#8d5534', '#5c3720'] },
   hair:      { label: 'Hair', type: 'style', values: [['none', 'None'], ['short', 'Short'], ['spiky', 'Spiky'], ['long', 'Long'], ['bun', 'Bun'], ['mohawk', 'Mohawk']] },
   hairColor: { label: 'Hair color', type: 'color', values: ['#1c1410', '#5a3a22', '#a8642c', '#e8c46a', '#e2e2e2', '#ff5fa2', '#3fa9ff', '#5cd65c'] },
@@ -405,6 +405,23 @@ function messyHair(head, color, len = 0.18, bangs = 0.16) {
   for (const x of [-0.16, -0.05, 0.06, 0.16]) strand(head, color, V(x, 0.56, -0.2), V(x * 1.2, -1, -0.45), 0.065, bangs);
 }
 const COSTUMES = {
+  messi: {
+    eyes: '#5a3a22', brows: '#3a2414',
+    parts: { skin: '#e9b48e', shirt: '#f4f6fa', sleeve: '#f4f6fa', hand: '#e9b48e', pants: '#1b1b1b', shin: '#f4f6fa', shoes: '#2a2a2a' },
+    decorate({ head, body, arms, legs, Y }) {
+      const sky = '#7ec8ee', ink = '#1b1b1b';
+      animeHair(head, '#4a2f1d', 'short');
+      for (const [bx, by, bz, sx, sy] of [[0, 0.06, -0.08, 1.4, 0.8], [-0.15, 0.14, -0.09, 0.8, 1.4], [0.15, 0.14, -0.09, 0.8, 1.4]]) {
+        const b = ball(0.085, '#7a5a40', bx, by, bz, head, sx, sy, 0.9); b.userData.noLine = true; b.userData.free = true; // beard on the chin and jaw
+      }
+      for (const x of [-0.22, 0, 0.22]) box(0.1, 0.6, 0.44, sky, x, Y(1.27), 0, body);      // striped shirt
+      box(0.06, 0.24, 0.02, ink, -0.06, Y(1.3), 0.222, body);                               // number 10 on the back
+      const zero = new THREE.Mesh(geo('TorusGeometry', 0.07, 0.025, 8, 16), mat(ink)); zero.scale.y = 1.6; zero.position.set(0.08, Y(1.3), 0.222); body.add(zero);
+      box(0.28, 0.07, 0.3, '#e8c040', 0, -0.18, 0, arms[1]);                                 // captain's armband
+      for (const arm of arms) box(0.27, 0.05, 0.3, sky, 0, -0.29, 0, arm);                   // sleeve trim
+      for (const leg of legs) box(0.26, 0.05, 0.26, sky, 0, -0.43, 0, leg);                  // sock bands
+    },
+  },
   shoto: {
     eyes: ['#3fc6d6', '#9aa3ad'], brows: '#c9ccd2', expression: 'cool', mouth: 'line',
     parts: { skin: '#f6d6c0', shirt: '#2c3e6e', sleeve: '#2c3e6e', hand: '#f6d6c0', pants: '#2c3e6e', shoes: '#1f2a44' },
