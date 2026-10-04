@@ -1,0 +1,17 @@
+/* Web Swing styles. Loaded by index.html after rail-rush.css (it reuses that file's panels and buttons). */
+#webswing { position: fixed; inset: 0; z-index: 15; background: var(--sky); overflow: hidden; touch-action: none; }
+#swCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#webswing .sw-panel { bottom: 24px; text-align: center; }
+#swHud { position: absolute; left: 0; right: 0; top: 0; padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 14px; display: flex;
+  justify-content: space-between; pointer-events: none; font-family: var(--display); font-size: 1.8rem; color: var(--paper);
+  -webkit-text-stroke: 1px var(--ink); text-shadow: 0 3px 0 var(--ink); font-variant-numeric: tabular-nums; }
+#swPad { position: absolute; inset: 0; pointer-events: none; }
+#swStick { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
+  background: rgba(255,255,255,.18); border: 3px solid rgba(255,255,255,.6); }
+#swKnob { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%;
+  background: rgba(255,255,255,.85); border: 3px solid var(--ink); }
+#swWeb { position: absolute; right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+  width: 104px; height: 104px; border-radius: 50%; pointer-events: auto; touch-action: none; user-select: none; -webkit-user-select: none;
+  font-family: var(--display); font-size: 1rem; line-height: 1.1; color: var(--paper); background: #e8333a;
+  border: 4px solid var(--ink); box-shadow: 0 5px 0 var(--ink); }
+#swWeb:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink); }

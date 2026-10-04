@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800&display=swap">
 <link rel="stylesheet" href="games/rail-rush.css">
+<link rel="stylesheet" href="games/web-swing.css">
 <style>
   /* Lobby: a full-screen layer over the games. One centered column; game cards in a
      wrapping grid, upcoming games as dashed empty slots. */
@@ -173,6 +174,44 @@
 </div>
 
 
+<section id="webswing" aria-label="Web Swing" hidden>
+  <canvas id="swCanvas"></canvas>
+  <div id="swHud" hidden><span id="swScore">90s</span><span><span class="coin"></span> <span id="swCoins">0</span></span></div>
+  <div id="swPad" hidden>
+    <div id="swStick" hidden><div id="swKnob"></div></div>
+    <button id="swWeb" type="button" aria-label="Jump and web">JUMP<br>WEB</button>
+  </div>
+  <section id="swMenu" class="panel center sw-panel">
+    <h1 class="logo">Web Swing</h1>
+    <div class="stats">
+      <div class="stat"><b id="swBest">0</b><span>Best</span></div>
+      <div class="stat"><b id="swBank">0</b><span>Coins</span></div>
+    </div>
+    <p class="hint">Grab as many coins as you can in 90 seconds! <b>Jump</b> off a roof, then <b>hold</b> to shoot a web and swing. Let go to fly. Run into a wall to climb it.<br>
+      Keys: WASD or arrows to move, hold Space to jump and swing. Touch: drag on the left to move, hold the JUMP/WEB button.</p>
+    <button class="btn primary" id="swPlay" type="button">Swing!</button>
+    <button class="btn" id="swLobby" type="button">Back to lobby</button>
+  </section>
+  <section id="swOver" class="panel center sw-panel" hidden>
+    <h2>Time’s up!</h2>
+    <div class="stats">
+      <div class="stat"><b id="swOverScore">0</b><span>Coins</span></div>
+      <div class="stat"><b id="swOverBest">0</b><span>Best</span></div>
+    </div>
+    <p class="hint" id="swNote"></p>
+    <div class="board" id="swBoard" hidden>
+      <h3>Leaderboard</h3>
+      <ol id="swBoardList"></ol>
+      <p class="hint" id="swBoardStatus"></p>
+    </div>
+    <button class="btn primary" id="swAgain" type="button">Swing again</button>
+    <div class="row">
+      <button class="btn" id="swMenuBtn" type="button">Menu</button>
+      <button class="btn" id="swOverLobby" type="button">Lobby</button>
+    </div>
+  </section>
+</section>
+
 <section id="lobby" aria-label="Game lobby">
 <div class="corner-actions">
   <button class="req-btn" id="inboxBtn" type="button" hidden>Inbox</button>
@@ -226,13 +265,27 @@
           </div>
         </div>
       </article>
+      <article class="card">
+        <img src="assets/web-swing.jpg" alt="A hero swinging on a web between city rooftops">
+        <div class="card-body">
+          <h3>Web Swing</h3>
+          <p>A 3D superhero city! Jump off rooftops, swing on webs, climb walls and grab coins before time runs out.</p>
+          <div class="meta">
+            <span class="pill">3D swinging</span>
+            <span class="pill best" id="best-webswing" hidden></span>
+          </div>
+          <div class="actions">
+            <button class="play" type="button" data-game="webswing">Play</button>
+            <button class="board-btn" type="button" data-board="webswing">Leaderboard</button>
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 
   <section aria-labelledby="soon-title">
     <h2 id="soon-title">Coming soon</h2>
     <div class="grid">
-      <div class="slot"><b>?</b><span>Next game</span></div>
       <div class="slot"><b>?</b><span>Next game</span></div>
       <div class="slot"><b>?</b><span>Next game</span></div>
     </div>
@@ -250,22 +303,30 @@
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
   </div>
+  <div class="leaders" id="top-webswing" data-board="webswing" data-title="Web Swing" data-unit="">
+    <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Coins</span></div>
+    <ol class="top"></ol>
+    <p class="leaders-note">Loading scores…</p>
+  </div>
 </main>
 </section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="leaderboard.js"></script>
 <script src="games/rail-rush.js"></script>
+<script src="games/web-swing.js"></script>
 <script>
 // Lobby: shows the game cards and hands control to a game when Play is pressed.
 (() => {
-  const GAMES = { railrush: () => window.RailRush };
+  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing };
   const lobby = document.getElementById('lobby');
   const readBest = key => { try { return Number(JSON.parse(localStorage.getItem(key))) || 0; } catch { return 0; } };
 
   function refresh() {
-    const best = readBest('railrush.best'), pill = document.getElementById('best-railrush');
-    pill.hidden = !best; pill.textContent = 'Best ' + best;
+    for (const [id, unit] of [['railrush', ''], ['webswing', '']]) {
+      const best = readBest(id + '.best'), pill = document.getElementById('best-' + id);
+      pill.hidden = !best; pill.textContent = 'Best ' + best + unit;
+    }
   }
   window.Lobby = {
     show() { for (const g of Object.values(GAMES)) g()?.close(); refresh(); showHome(); lobby.hidden = false; },
@@ -287,16 +348,16 @@
 
   // Top 20 under each game's card, live.
   const place = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
-  Leaderboard.watch('railrush', 20, rows => {
-    const box = document.getElementById('top-railrush'), list = box.querySelector('ol'), note = box.querySelector('.leaders-note');
+  for (const box of document.querySelectorAll('#leaderPage .leaders')) Leaderboard.watch(box.dataset.board, 20, rows => {
+    const list = box.querySelector('ol'), note = box.querySelector('.leaders-note'), unit = box.dataset.unit || '';
     list.innerHTML = '';
     note.hidden = !!(rows && rows.length);
-    note.textContent = !rows ? 'The leaderboard only works in the Claude version of Level Up.' : 'No scores yet. Play a run to get on the board!';
+    note.textContent = !rows ? 'The leaderboard only works in the Claude version of Level Up.' : 'No scores yet. Play to get on the board!';
     box.querySelector('.leaders-head').hidden = !(rows && rows.length);
     if (!rows) return;
     rows.forEach((row, i) => {
       const li = document.createElement('li'); if (row.me) li.className = 'me';
-      for (const [cls, text] of [['rank', place(i + 1)], ['name', row.name || 'Mystery Runner'], ['pts', row.score]]) {
+      for (const [cls, text] of [['rank', place(i + 1)], ['name', row.name || 'Mystery Player'], ['pts', row.score + unit]]) {
         const span = document.createElement('span'); span.className = cls; span.textContent = text; li.appendChild(span);
       }
       list.appendChild(li);
