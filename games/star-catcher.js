@@ -13,6 +13,14 @@
 
   let W = 400, H = 600, active = false, last = 0, shake = 0;
   let state = 'menu';                         // menu | play | paused | over
+  // Three difficulties. `level` still goes up every 100 points and makes each one a little faster.
+  // Harder modes give more points per food, so the one leaderboard stays fair.
+  const DIFFS = {
+    easy: { name: 'Easy', points: 5, veg: l => Math.min(0.08 + l * 0.01, 0.18), heart: 0.06, speed: l => 90 + l * 10, every: l => Math.max(0.8, 1.2 - l * 0.03), count: () => 1 },
+    medium: { name: 'Medium', points: 10, veg: l => Math.min(0.15 + l * 0.04, 0.45), heart: 0.03, speed: l => 140 + l * 25, every: l => Math.max(0.25, 0.9 - l * 0.06), count: () => 1 },
+    hard: { name: 'Hard', points: 20, veg: l => Math.min(0.38 + l * 0.02, 0.5), heart: 0.03, speed: l => 220 + l * 30, every: l => Math.max(0.1, 0.28 - l * 0.02), count: () => 2 + (Math.random() < 0.4 ? 1 : 0) },
+  };
+  let diff = 'easy';                          // you start on Easy unless you pick another level
   let player, items, particles, score, lives, level, spawnTimer, stars, best = store.get('best', 0);
   const keys = {};
   let pointerX = null;
@@ -34,10 +42,13 @@
     score = 0; lives = 3; level = 1; spawnTimer = 0; stars = 0;
   }
   function spawn() {
-    const rockChance = Math.min(0.15 + level * 0.04, 0.45), roll = Math.random();
-    const type = roll < rockChance ? (Math.random() < 0.5 ? 'broccoli' : 'carrot') : roll > 0.97 ? 'heart' : Math.random() < 0.5 ? 'burger' : 'hotdog';
-    const r = type === 'heart' ? 16 : 20;
-    items.push({ type, r, x: r + Math.random() * (W - 2 * r), y: -r, vy: 140 + level * 25 + Math.random() * 60, spin: Math.random() * Math.PI * 2 });
+    const D = DIFFS[diff];
+    for (let i = D.count(); i > 0; i--) {                 // on Hard, lots fall at once
+      const roll = Math.random();
+      const type = roll < D.veg(level) ? (Math.random() < 0.5 ? 'broccoli' : 'carrot') : roll > 1 - D.heart ? 'heart' : Math.random() < 0.5 ? 'burger' : 'hotdog';
+      const r = type === 'heart' ? 16 : 20;
+      items.push({ type, r, x: r + Math.random() * (W - 2 * r), y: -r - Math.random() * 60 * (i - 1), vy: D.speed(level) + Math.random() * 60, spin: Math.random() * Math.PI * 2 });
+    }
   }
   function burst(x, y, color, n = 14) {
     for (let i = 0; i < n; i++) {
@@ -68,13 +79,13 @@
     player.chew = Math.max(0, player.chew - dt); player.hurt = Math.max(0, player.hurt - dt);
 
     spawnTimer -= dt;
-    if (spawnTimer <= 0) { spawn(); spawnTimer = Math.max(0.25, 0.9 - level * 0.06); }
+    if (spawnTimer <= 0) { spawn(); spawnTimer = DIFFS[diff].every(level); }
     for (const it of items) {
       it.y += it.vy * dt; it.spin += dt * 2;
       const caught = it.y + it.r > player.y - player.h / 2 && it.y - it.r < player.y + player.h / 2 && Math.abs(it.x - player.x) < player.w / 2 + it.r * 0.6;
       if (caught) {
         it.dead = true;
-        if (it.type === 'burger' || it.type === 'hotdog') { score += 10; stars++; player.chew = 0.35; burst(it.x, it.y, it.type === 'burger' ? '#e0a040' : '#ffd34d'); }
+        if (it.type === 'burger' || it.type === 'hotdog') { score += DIFFS[diff].points; stars++; player.chew = 0.35; burst(it.x, it.y, it.type === 'burger' ? '#e0a040' : '#ffd34d'); }
         else if (it.type === 'heart') { lives = Math.min(lives + 1, 5); player.chew = 0.35; burst(it.x, it.y, '#ff6b9a'); }
         else { lives--; player.hurt = 0.6; burst(it.x, it.y, it.type === 'carrot' ? '#ff8a1f' : '#3fae3a', 24); shake = 0.3; }   // yuck, vegetables!
       } else if (it.y - it.r > H) it.dead = true;
@@ -82,7 +93,7 @@
     items = items.filter(it => !it.dead);
     for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; p.life -= dt; }
     particles = particles.filter(p => p.life > 0);
-    level = 1 + Math.floor(score / 100);
+    level = 1 + Math.floor(stars / 10);
     if (lives <= 0) gameOver();
   }
 
@@ -212,7 +223,7 @@
       drawBoy(t);
       ctx.fillStyle = '#f4f1ff'; ctx.font = 'bold 22px Nunito, system-ui, sans-serif'; ctx.textBaseline = 'top';
       ctx.textAlign = 'left'; ctx.fillText(`Score ${score}`, 16, 16);
-      ctx.font = '16px Nunito, system-ui, sans-serif'; ctx.fillText(`Level ${level}   Best ${best}`, 16, 44);
+      ctx.font = '16px Nunito, system-ui, sans-serif'; ctx.fillText(`${DIFFS[diff].name}   Level ${level}   Best ${best}`, 16, 44);
       ctx.textAlign = 'right'; ctx.font = '22px system-ui, sans-serif';
       ctx.fillText('❤️'.repeat(Math.max(lives, 0)), W - 16, 16);
     }
@@ -222,7 +233,10 @@
   // ---------- Screens ----------
   function show(id) { for (const p of ['scMenu', 'scOver', 'scPaused']) $(p).hidden = p !== id; $('scPause').hidden = state !== 'play'; }
   function toMenu() { state = 'menu'; reset(); $('scBest').textContent = best; $('scBank').textContent = bankNow(); show('scMenu'); }
-  function start() { reset(); state = 'play'; show(null); last = performance.now(); }
+  function start(d) {
+    if (typeof d === 'string') diff = d;
+    reset(); state = 'play'; show(null); last = performance.now();
+  }
   function togglePause() {
     if (state === 'play') { state = 'paused'; show('scPaused'); }
     else if (state === 'paused') { state = 'play'; show(null); last = performance.now(); }
@@ -231,6 +245,7 @@
     state = 'over';
     addCoins(stars);
     const newBest = score > best; if (newBest) { best = score; store.set('best', best); }
+    $('scOverMode').textContent = DIFFS[diff].name;
     $('scOverScore').textContent = score; $('scOverCoins').textContent = stars; $('scOverBest').textContent = best;
     $('scNote').textContent = newBest ? 'New best score! 🎉' : `You have ${bankNow()} coins to spend in Dodge and Weave.`;
     $('scBoardStatus').textContent = score > 0 ? 'Saving your score…' : '';
@@ -259,13 +274,13 @@
     if (!active) return;
     const k = e.key.toLowerCase(); keys[k] = true;
     if (k === 'p' || k === 'escape') togglePause();
-    else if ((k === 'enter' || k === ' ') && (state === 'menu' || state === 'over')) { e.preventDefault(); start(); }
+    else if ((k === 'enter' || k === ' ') && (state === 'menu' || state === 'over')) { e.preventDefault(); start(state === 'menu' ? 'easy' : undefined); }
   });
   window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
   canvas.addEventListener('pointermove', e => { pointerX = e.clientX - canvas.getBoundingClientRect().left; });
   canvas.addEventListener('pointerdown', e => { e.preventDefault(); pointerX = e.clientX - canvas.getBoundingClientRect().left; });
-  $('scPlay').onclick = start;
-  $('scAgain').onclick = start;
+  for (const d of Object.keys(DIFFS)) $('sc-' + d).onclick = () => start(d);
+  $('scAgain').onclick = () => start();
   $('scResume').onclick = togglePause;
   $('scPause').onclick = togglePause;
   $('scMenuBtn').onclick = toMenu;
@@ -289,6 +304,6 @@
   window.StarCatcher = {
     open() { root.hidden = false; active = true; resize(); toMenu(); last = performance.now(); requestAnimationFrame(loop); },
     close() { if (state === 'play') state = 'paused'; active = false; root.hidden = true; for (const k in keys) keys[k] = false; },
-    _state: () => ({ state, score, lives, level, stars, x: player && player.x }),
+    _state: () => ({ state, diff, items: items && items.length, score, lives, level, stars, x: player && player.x }),
   };
 })();

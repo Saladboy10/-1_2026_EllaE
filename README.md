@@ -59,5 +59,6 @@ A hungry cartoon boy with a huge mouth. Move him under the falling burgers and h
 (10 points each), and keep away from the broccoli and carrots (they cost a life). Hearts give an extra life, up to 5.
 
 - **Move:** ← → (or A / D), the mouse, or your finger. **P** pauses.
-- It gets faster every 100 points. Every burger and hot dog is also a coin in the Dodge and Weave bank.
+- **Levels:** Easy (a breeze, 5 points a food), Medium (a bit challenging, 10 points) or Hard (everything falls at once, 20 points). If you don't pick one, it starts on Easy.
+- It gets faster every 10 foods. Every burger and hot dog is also a coin in the Dodge and Weave bank.
 - It has its own leaderboard in the lobby.

@@ -5,3 +5,11 @@
 #scPause { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
   font-family: var(--display); font-size: 1rem; padding: 6px 14px; border-radius: 999px; border: 3px solid var(--ink);
   background: var(--paper); color: var(--ink); box-shadow: 0 3px 0 var(--ink); }
+.sc-diffs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+.sc-diff { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; }
+.sc-diff b { font-family: var(--display); font-size: 1.15rem; }
+.sc-diff span { font-size: .72rem; font-weight: 800; line-height: 1.15; }
+#sc-easy { background: #8ee08a; }
+#sc-medium { background: #ffcf1a; }
+#sc-hard { background: #ff7b7b; }
+#scOverMode { font-size: .6em; opacity: .7; }
