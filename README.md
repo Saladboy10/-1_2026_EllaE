@@ -69,4 +69,5 @@ Each round some squares glow; get onto one before the countdown ends, because th
 Fewer squares glow each round and players bump each other. Last one standing wins (or survive all 15 rounds).
 
 - **Move:** WASD or the arrow keys, or drag your finger anywhere (a joystick appears under it).
+- Sparkly: twinkling stars, sparkles fizzing off the glowing squares, a glitter trail behind you, sparkle bursts when someone falls and confetti when you win.
 - **Score:** 10 points a round survived, plus 50 for winning. Coins: 1 a round, plus 10 for winning. It has its own leaderboard.

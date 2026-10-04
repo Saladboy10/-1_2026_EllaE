@@ -62,11 +62,19 @@
     scene.add(new THREE.HemisphereLight('#c9c2ff', '#2a1850', 0.9));
     const sun = new THREE.DirectionalLight('#ffffff', 0.6); sun.position.set(8, 20, 10); scene.add(sun);
 
-    // Twinkly dots far below and around, so the floor looks like it floats in space.
-    const pts = new Float32Array(900);
-    for (let i = 0; i < 300; i++) { pts[i * 3] = rand(-70, 70); pts[i * 3 + 1] = rand(-40, 10); pts[i * 3 + 2] = rand(-70, 30); }
-    const dots = new THREE.BufferGeometry(); dots.setAttribute('position', new THREE.BufferAttribute(pts, 3));
-    scene.add(new THREE.Points(dots, new THREE.PointsMaterial({ color: '#ffffff', size: 0.25 })));
+    // Twinkling stars far below and around, so the floor looks like it floats in space.
+    const STAR_COLS = ['#ffffff', '#ffe9a8', '#c9b8ff', '#9ff3ff', '#ffb8ec'];
+    const stars = sparkleCloud(400, (i, pos, col, size, phase) => {
+      pos.push(rand(-80, 80), rand(-45, 12), rand(-80, 35));
+      const c = new THREE.Color(STAR_COLS[i % STAR_COLS.length]); col.push(c.r, c.g, c.b);
+      size.push(rand(0.6, 2.2)); phase.push(rand(0, 7));
+    });
+    scene.add(stars.points);
+    // Sparkles that fly up off the glowing squares, trail behind you and burst when someone falls.
+    sparks = sparkleCloud(SPARKS, (i, pos, col, size, phase) => { pos.push(0, -999, 0); col.push(1, 1, 1); size.push(0); phase.push(rand(0, 7)); });
+    sparks.life = new Float32Array(SPARKS); sparks.max = new Float32Array(SPARKS); sparks.base = new Float32Array(SPARKS);
+    sparks.vel = new Float32Array(SPARKS * 3); sparks.next = 0;
+    scene.add(sparks.points);
 
     const geo = new THREE.BoxGeometry(TILE - 0.12, 0.5, TILE - 0.12);
     const edge = new THREE.EdgesGeometry(geo);
@@ -92,6 +100,79 @@
     g.lineWidth = 8; g.strokeStyle = '#140b2e'; g.strokeText(text, 64, 34);
     g.fillStyle = n >= cap ? '#ff5b5b' : '#ffffff'; g.fillText(text, 64, 34);
     s.material.map.needsUpdate = true;
+  }
+  // ---------- Sparkles ----------
+  // A soft four-pointed twinkle, drawn once and used for every sparkle and star.
+  let sparkTex = null, sparks = null;
+  const SPARKS = 500, sparkMats = [];
+  function sparkleTexture() {
+    if (sparkTex) return sparkTex;
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d'), grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.18, 'rgba(255,255,255,.8)'); grad.addColorStop(0.45, 'rgba(255,255,255,.12)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad; g.fillRect(0, 0, 64, 64);
+    g.fillStyle = 'rgba(255,255,255,.95)';
+    for (const [w, h] of [[3, 30], [30, 3]]) { g.beginPath(); g.ellipse(32, 32, w, h, 0, 0, 7); g.fill(); }
+    return sparkTex = new THREE.CanvasTexture(c);
+  }
+  // Points that each twinkle on their own beat (size and brightness pulse with `phase`).
+  function sparkleCloud(n, fill) {
+    const pos = [], col = [], size = [], phase = [];
+    for (let i = 0; i < n; i++) fill(i, pos, col, size, phase);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    g.setAttribute('size', new THREE.Float32BufferAttribute(size, 1));
+    g.setAttribute('phase', new THREE.Float32BufferAttribute(phase, 1));
+    const m = new THREE.ShaderMaterial({
+      uniforms: { map: { value: sparkleTexture() }, time: { value: 0 }, scale: { value: 400 } },
+      vertexShader: `attribute float size; attribute float phase; attribute vec3 color; uniform float time; uniform float scale;
+        varying vec3 vColor; varying float vAlpha;
+        void main() {
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          float tw = 0.55 + 0.45 * sin(time * 4.0 + phase);
+          gl_PointSize = size * tw * scale / -mv.z; vColor = color; vAlpha = tw;
+          gl_Position = projectionMatrix * mv;
+        }`,
+      fragmentShader: `uniform sampler2D map; varying vec3 vColor; varying float vAlpha;
+        void main() { vec4 t = texture2D(map, gl_PointCoord); gl_FragColor = vec4(vColor, t.a * vAlpha); }`,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    });
+    sparkMats.push(m);
+    const points = new THREE.Points(g, m); points.frustumCulled = false;
+    return { points, pos: g.attributes.position, col: g.attributes.color, size: g.attributes.size };
+  }
+  function spark(x, y, z, color, vx, vy, vz, life, size) {
+    const s = sparks, i = s.next; s.next = (i + 1) % SPARKS;
+    s.pos.setXYZ(i, x, y, z); const c = new THREE.Color(color); s.col.setXYZ(i, c.r, c.g, c.b);
+    s.vel[i * 3] = vx; s.vel[i * 3 + 1] = vy; s.vel[i * 3 + 2] = vz;
+    s.life[i] = s.max[i] = life; s.base[i] = size;
+  }
+  function burst(x, y, z, colors, n, power = 4) {
+    for (let k = 0; k < n; k++) {
+      const a = rand(0, 7), u = rand(-1, 1), r = Math.sqrt(1 - u * u), sp = rand(power * 0.4, power);
+      spark(x, y, z, colors[k % colors.length], Math.cos(a) * r * sp, Math.abs(u) * sp + 1.5, Math.sin(a) * r * sp, rand(0.7, 1.4), rand(0.35, 0.7));
+    }
+  }
+  function updateSparks(dt, t) {
+    if (!sparks) return;
+    for (const m of sparkMats) m.uniforms.time.value = t;
+    // Glowing squares fizz with rising sparkles; you leave a glittery trail when you run.
+    if (phase === 'glow') for (const tile of tiles) if (tile.glow && Math.random() < dt * 9) {
+      spark(tile.x + rand(-1.2, 1.2), 0.1, tile.z + rand(-1.2, 1.2), Math.random() < 0.5 ? glowColor : '#ffffff', rand(-0.2, 0.2), rand(1.2, 2.6), rand(-0.2, 0.2), rand(0.8, 1.5), rand(0.45, 0.8));
+    }
+    if (me && me.alive && Math.hypot(me.vel.x, me.vel.z) > 1 && Math.random() < dt * 22) {
+      spark(me.pos.x + rand(-0.3, 0.3), 0.15, me.pos.z + rand(-0.3, 0.3), Math.random() < 0.5 ? '#ffd23f' : '#ffffff', rand(-0.3, 0.3), rand(0.5, 1.2), rand(-0.3, 0.3), rand(0.4, 0.8), rand(0.3, 0.5));
+    }
+    const s = sparks;
+    for (let i = 0; i < SPARKS; i++) {
+      if (s.life[i] <= 0) { if (s.size.getX(i)) s.size.setX(i, 0); continue; }
+      s.life[i] -= dt;
+      s.vel[i * 3 + 1] -= 1.2 * dt;
+      s.pos.setXYZ(i, s.pos.getX(i) + s.vel[i * 3] * dt, s.pos.getY(i) + s.vel[i * 3 + 1] * dt, s.pos.getZ(i) + s.vel[i * 3 + 2] * dt);
+      s.size.setX(i, s.base[i] * Math.max(0, s.life[i] / s.max[i]) * 4);
+    }
+    s.pos.needsUpdate = s.col.needsUpdate = s.size.needsUpdate = true;
   }
   // A name tag that floats over a player's head.
   function nameTag(text, mine) {
@@ -160,7 +241,7 @@
   function drop() {
     phase = 'drop'; phaseT = 1.6;
     for (const t of tiles) if (!t.glow) t.vy = -0.01;            // the dark squares start to fall
-    const fall = p => { p.alive = false; p.falling = true; p.vel.set(p.vel.x * 0.3, 2, p.vel.z * 0.3); };
+    const fall = p => { p.alive = false; p.falling = true; p.vel.set(p.vel.x * 0.3, 2, p.vel.z * 0.3); burst(p.pos.x, 1, p.pos.z, [glowColor, '#ffffff', '#ffd23f'], 26); };
     const cap = capacity();
     for (const t of tiles) if (t.glow) onTile(t).sort((a, b) => a.enterT - b.enterT).slice(cap).forEach(fall);   // too many: last to arrive falls
     for (const p of alive()) if (!p.tile || !p.tile.glow) fall(p);
@@ -253,6 +334,7 @@
 
   // ---------- Drawing ----------
   function draw(t) {
+    updateSparks(Math.min(0.05, t - (draw.last || t)), t); draw.last = t;
     const pulse = 0.6 + Math.sin(t * 8) * 0.25, col = new THREE.Color(glowColor);
     for (const tile of tiles) {
       const m = tile.mesh.material;
@@ -303,6 +385,7 @@
   function start() { reset(); state = 'play'; show(null); $('gsRound').textContent = 'Get ready!'; }
   function finish(won) {
     state = 'over';
+    if (won) for (let k = 0; k < 6; k++) burst(me.pos.x + rand(-2, 2), 1.5, me.pos.z + rand(-2, 2), GLOWS, 30, 7);   // confetti sparkles!
     const left = alive().length, place = won ? 1 : left + 1;
     const score = survived * 10 + (won ? 50 : 0), coins = survived + (won ? 10 : 0);
     addCoins(coins);
@@ -369,6 +452,7 @@
     renderer.setSize(w, h, false); camera.aspect = w / h;
     camera.fov = w / h < 0.8 ? 72 : 50;                     // see the whole floor on a tall phone screen
     camera.updateProjectionMatrix();
+    for (const m of sparkMats) m.uniforms.scale.value = h * renderer.getPixelRatio() * 0.6;
   }
   window.addEventListener('resize', () => { if (active) resize(); });
   function loop(t) {
