@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="games/glow-squares.css">
 <link rel="stylesheet" href="games/tumble-dash.css">
 <link rel="stylesheet" href="games/monster-drive.css">
+<link rel="stylesheet" href="games/neon-tunnel.css">
 <style>
   /* Lobby: a full-screen layer over the games. One centered column; game cards in a
      wrapping grid, upcoming games as dashed empty slots. */
@@ -390,6 +391,43 @@
   </section>
 </section>
 
+<section id="neontunnel" aria-label="Neon Tunnel" hidden>
+  <canvas id="ntCanvas"></canvas>
+  <div id="ntHud" hidden><span id="ntScore">0</span></div>
+  <section id="ntMenu" class="panel center nt-panel">
+    <h1 class="nt-logo">NEON<br><span>TUNNEL</span></h1>
+    <div class="stats">
+      <div class="stat"><b id="ntBest">0</b><span>Best</span></div>
+      <div class="stat"><b id="ntBank">0</b><span>Coins</span></div>
+    </div>
+    <p class="hint">Spin the tunnel so your glowing ball flies through the gaps! ← → or A D, or hold the left or right side of the screen.</p>
+    <div class="row">
+      <button class="nt-diff" id="ntDiff" type="button"></button>
+      <button class="btn primary" id="ntPlay" type="button">▶ Play</button>
+    </div>
+    <button class="btn" id="ntLobby" type="button">Back to lobby</button>
+  </section>
+  <section id="ntOver" class="panel center nt-panel" hidden>
+    <h2>Crash!</h2>
+    <div class="stats">
+      <div class="stat"><b id="ntOverScore">0</b><span>Score</span></div>
+      <div class="stat"><b id="ntOverCoins">0</b><span>Coins</span></div>
+      <div class="stat"><b id="ntOverBest">0</b><span>Best</span></div>
+    </div>
+    <p class="hint" id="ntNote"></p>
+    <div class="board" id="ntBoard" hidden>
+      <h3>Leaderboard</h3>
+      <ol id="ntBoardList"></ol>
+      <p class="hint" id="ntBoardStatus"></p>
+    </div>
+    <button class="btn primary" id="ntAgain" type="button">Fly again</button>
+    <div class="row">
+      <button class="btn" id="ntMenuBtn" type="button">Menu</button>
+      <button class="btn" id="ntOverLobby" type="button">Lobby</button>
+    </div>
+  </section>
+</section>
+
 <section id="lobby" aria-label="Game lobby">
 <div class="corner-actions">
   <button class="req-btn" id="inboxBtn" type="button" hidden>Inbox</button>
@@ -537,6 +575,21 @@
           </div>
         </div>
       </article>
+      <article class="card">
+        <img src="assets/neon-tunnel.jpg" alt="A glowing neon tunnel with colorful walls rushing toward you">
+        <div class="card-body">
+          <h3>Neon Tunnel</h3>
+          <p>Zoom through a glowing tunnel and spin it to fly through the gaps in the walls. It keeps getting faster!</p>
+          <div class="meta">
+            <span class="pill">Reflexes</span>
+            <span class="pill best" id="best-neontunnel" hidden></span>
+          </div>
+          <div class="actions">
+            <button class="play" type="button" data-game="neontunnel">Play</button>
+            <button class="board-btn" type="button" data-board="neontunnel">Leaderboard</button>
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 
@@ -589,6 +642,11 @@
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
   </div>
+  <div class="leaders" id="top-neontunnel" data-board="neontunnel" data-title="Neon Tunnel" data-unit="">
+    <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
+    <ol class="top"></ol>
+    <p class="leaders-note">Loading scores…</p>
+  </div>
 </main>
 </section>
 
@@ -601,15 +659,16 @@
 <script src="games/glow-squares.js"></script>
 <script src="games/tumble-dash.js"></script>
 <script src="games/monster-drive.js"></script>
+<script src="games/neon-tunnel.js"></script>
 <script>
 // Lobby: shows the game cards and hands control to a game when Play is pressed.
 (() => {
-  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher, glowsquares: () => window.GlowSquares, tumbledash: () => window.TumbleDash, honeycomb: () => window.Honeycomb, monsterdrive: () => window.MonsterDrive };
+  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher, glowsquares: () => window.GlowSquares, tumbledash: () => window.TumbleDash, honeycomb: () => window.Honeycomb, monsterdrive: () => window.MonsterDrive, neontunnel: () => window.NeonTunnel };
   const lobby = document.getElementById('lobby');
   const readBest = key => { try { return Number(JSON.parse(localStorage.getItem(key))) || 0; } catch { return 0; } };
 
   function refresh() {
-    for (const [id, unit] of [['railrush', ''], ['webswing', ''], ['starcatcher', ''], ['glowsquares', ''], ['tumbledash', ''], ['honeycomb', '']]) {
+    for (const [id, unit] of [['railrush', ''], ['webswing', ''], ['starcatcher', ''], ['glowsquares', ''], ['tumbledash', ''], ['honeycomb', ''], ['neontunnel', '']]) {
       const best = readBest(id + '.best'), pill = document.getElementById('best-' + id);
       pill.hidden = !best; pill.textContent = 'Best ' + best + unit;
     }
