@@ -43,10 +43,10 @@ A 3D endless runner. Dodge trains and barriers across three tracks, grab coins, 
 
 **Customize avatar** lets you type your runner's name (it floats above them and shows on the score screen) and pick a ready-made outfit or build your own look:
 
-- **Outfits** (bought with coins): Alina 50 (dances on the menu), Quills 50, Big Bertha 100, Marge Simpson 100, Red Renaldo 100, Luffy 100, Zoro 100, Deku 100, Denki 100, Uraraka 100, All Might 100, Shoto 100, Aizawa 100, Messi 50. Your own name stays the same whatever you wear.
-- **Emotes:** Wave, Dance and Floss are free; Spin 50, Jump for Joy 75, Dab 100, and The Duggee, Moonwalk, The Worm, Ransom and I Want It That Way 50 each. Play them from the menu, the avatar maker, or number keys. Tap anything locked once to try it on (or watch the emote) before buying; tap it again to buy.
-- **My own:** skin, hair, eye color, expression (Normal, Happy, Angry, Sad, Surprised, Wink, Cool), mouth (Smile, Big grin, Gritted teeth, Smirk, Shout, Surprised, Frown, Tongue out, Straight), clothes, hats and extras. Outfits with a visible face also let you pick the expression and mouth. Coins you collect are saved and can unlock the Crown (150) and the Cape (100).
-- **Pets** that run beside you (bought with coins): Milo 50, Tails 50, Ember the dragon 75
+- **Outfits** (bought with coins): Alina 105 (dances on the menu), Quills 105, Big Bertha 155, Marge Simpson 155, Red Renaldo 155, Luffy 155, Zoro 155, Deku 155, Denki 155, Uraraka 155, All Might 155, Shoto 155, Aizawa 155, Messi 105. Your own name stays the same whatever you wear.
+- **Emotes:** Wave, Dance and Floss are free; Spin 105, Jump for Joy 130, Dab 155, and The Duggee, Moonwalk, The Worm, Ransom and I Want It That Way 105 each. Play them from the menu, the avatar maker, or number keys. Tap anything locked once to try it on (or watch the emote) before buying; tap it again to buy.
+- **My own:** skin, hair, eye color, expression (Normal, Happy, Angry, Sad, Surprised, Wink, Cool), mouth (Smile, Big grin, Gritted teeth, Smirk, Shout, Surprised, Frown, Tongue out, Straight), clothes, hats and extras. Outfits with a visible face also let you pick the expression and mouth. Coins you collect are saved and can unlock the Crown (205) and the Cape (155).
+- **Pets** that run beside you (bought with coins): Milo 105, Tails 105, Ember the dragon 130
 
 ## Web Swing
 A 3D superhero city at sunset, with glass skyscrapers, water towers, traffic, real shadows and the river all round. You play as Spider Pig (in his red-and-blue web suit), or press the Hero button on the menu to switch to your Dodge and Weave runner.

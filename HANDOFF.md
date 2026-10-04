@@ -15,7 +15,7 @@ between accounts, so this page is the summary of what was built and how to carry
   coins, a crash-screen leaderboard, anime-style characters (toon shading, outlines, anime eyes and hair),
   an avatar maker (skin, hair, eyes, expression, mouth, clothes, hats, extras, name), skins, pets and emotes
   bought with coins (tap once to try, again to buy), and a Codes box in the top-left of the menu.
-- **Pets**: Milo the pup (50), Tails the fox (50) and Ember, a baby dragon with flapping wings (75).
+- **Pets**: Milo the pup (105), Tails the fox (105) and Ember, a baby dragon with flapping wings (130).
   Pets are built in `buildPet` in `games/rail-rush.js` (Ember has its own `buildDragon`) and listed in the `pet` row near the top of that file.
 - **Web Swing (`games/web-swing.js`, `games/web-swing.css`)**: a 3D city where you swing on webs, climb walls and
   collect coins in 90 seconds as Spider Pig (the default, `buildSpiderPig`) or your Dodge and Weave runner. Coins go into the Dodge and Weave bank; it has its own leaderboard.

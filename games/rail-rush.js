@@ -8,7 +8,7 @@ const store = {
 // ---------- Avatar options ----------
 const CLOTHES = ['#ff4f7b', '#ffcf1a', '#33c27a', '#2f80ff', '#8a5cff', '#ff8a2a', '#00c2c7', '#1b1530', '#ffffff', '#7a8394'];
 const OPTIONS = {
-  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 50], ['silver', 'Quills', 50], ['gown', 'Big Bertha', 100], ['beehive', 'Marge Simpson', 100], ['merc', 'Red Renaldo', 100], ['straw', 'Luffy', 100], ['swords', 'Zoro', 100], ['deku', 'Deku', 100], ['denki', 'Denki', 100], ['uraraka', 'Uraraka', 100], ['allmight', 'All Might', 100], ['shoto', 'Shoto', 100], ['aizawa', 'Aizawa', 100], ['messi', 'Messi', 50]] },
+  outfit:    { label: 'Outfit', type: 'style', values: [['custom', 'My own'], ['alien', 'Alina', 105], ['silver', 'Quills', 105], ['gown', 'Big Bertha', 155], ['beehive', 'Marge Simpson', 155], ['merc', 'Red Renaldo', 155], ['straw', 'Luffy', 155], ['swords', 'Zoro', 155], ['deku', 'Deku', 155], ['denki', 'Denki', 155], ['uraraka', 'Uraraka', 155], ['allmight', 'All Might', 155], ['shoto', 'Shoto', 155], ['aizawa', 'Aizawa', 155], ['messi', 'Messi', 105]] },
   skin:      { label: 'Skin', type: 'color', values: ['#ffdbc2', '#f1c19b', '#d9a07a', '#b97850', '#8d5534', '#5c3720'] },
   hair:      { label: 'Hair', type: 'style', values: [['none', 'None'], ['short', 'Short'], ['spiky', 'Spiky'], ['long', 'Long'], ['bun', 'Bun'], ['mohawk', 'Mohawk']] },
   hairColor: { label: 'Hair color', type: 'color', values: ['#1c1410', '#5a3a22', '#a8642c', '#e8c46a', '#e2e2e2', '#ff5fa2', '#3fa9ff', '#5cd65c'] },
@@ -18,10 +18,10 @@ const OPTIONS = {
   shirt:     { label: 'Top', type: 'color', values: CLOTHES },
   pants:     { label: 'Pants', type: 'color', values: CLOTHES },
   shoes:     { label: 'Shoes', type: 'color', values: CLOTHES },
-  hat:       { label: 'Hat', type: 'style', values: [['none', 'None'], ['cap', 'Cap'], ['beanie', 'Beanie'], ['headphones', 'Headphones'], ['crown', 'Crown', 150]] },
+  hat:       { label: 'Hat', type: 'style', values: [['none', 'None'], ['cap', 'Cap'], ['beanie', 'Beanie'], ['headphones', 'Headphones'], ['crown', 'Crown', 205]] },
   hatColor:  { label: 'Hat & bag color', type: 'color', values: CLOTHES },
-  extra:     { label: 'Extra', type: 'style', values: [['none', 'None'], ['glasses', 'Glasses'], ['backpack', 'Backpack'], ['cape', 'Cape', 100]] },
-  pet:       { label: 'Pet', type: 'style', values: [['none', 'None'], ['pup', 'Milo', 50], ['fox', 'Tails', 50], ['dragon', 'Ember', 75]] },
+  extra:     { label: 'Extra', type: 'style', values: [['none', 'None'], ['glasses', 'Glasses'], ['backpack', 'Backpack'], ['cape', 'Cape', 155]] },
+  pet:       { label: 'Pet', type: 'style', values: [['none', 'None'], ['pup', 'Milo', 105], ['fox', 'Tails', 105], ['dragon', 'Ember', 130]] },
 };
 const DEFAULT_AVATAR = { outfit: 'custom', pet: 'none', expression: 'normal', mouth: 'smile', eyes: '#7a3b2e', skin: '#f1c19b', hair: 'short', hairColor: '#5a3a22', shirt: '#ff4f7b', pants: '#2f80ff',
   shoes: '#ffffff', hat: 'cap', hatColor: '#ffcf1a', extra: 'backpack' };
@@ -56,21 +56,21 @@ const EMOTES = {
     a.arms.forEach((arm, i) => { arm.rotation.z = f * 0.7 * k; arm.rotation.x = (i ? 1 : -1) * g * 0.45 * k; });
     a.body.rotation.z = -f * 0.18 * k;
   } },
-  spin: { name: 'Spin', dur: 1.8, price: 50, pose(a, t, d) {
+  spin: { name: 'Spin', dur: 1.8, price: 105, pose(a, t, d) {
     const k = ramp(t, d, 0.15), p = t / d, e = p < 0.5 ? 2 * p * p : 1 - 2 * (1 - p) * (1 - p);
     a.root.rotation.y = e * Math.PI * 4; a.arms[0].rotation.z = -1.4 * k; a.arms[1].rotation.z = 1.4 * k; a.legs[0].rotation.x = 0.3 * k;
   } },
-  joy: { name: 'Jump for Joy', dur: 1.8, price: 75, pose(a, t, d) {
+  joy: { name: 'Jump for Joy', dur: 1.8, price: 130, pose(a, t, d) {
     const k = ramp(t, d, 0.15), h = Math.abs(Math.sin(t * Math.PI / 0.9));
     a.root.position.y += h * 0.9; a.arms[0].rotation.z = -2.8 * k; a.arms[1].rotation.z = 2.8 * k;
     a.legs[0].rotation.x = h * 0.9; a.legs[1].rotation.x = -h * 0.5;
   } },
-  dab: { name: 'Dab', dur: 2, price: 100, pose(a, t, d) {
+  dab: { name: 'Dab', dur: 2, price: 155, pose(a, t, d) {
     const k = ramp(t, d, 0.2);
     a.arms[1].rotation.z = 2.3 * k; a.arms[0].rotation.x = 1.7 * k; a.arms[0].rotation.z = 1.0 * k;
     a.head.rotation.x = -0.35 * k; a.head.rotation.z = 0.35 * k; a.body.rotation.z = -0.1 * k;
   } },
-  duggee: { name: 'The Duggee', dur: 3.4, price: 50, pose(a, t, d) {
+  duggee: { name: 'The Duggee', dur: 3.4, price: 105, pose(a, t, d) {
     const k = ramp(t, d), b = t * 6, sw = Math.sin(b);
     a.body.rotation.x = 0.14 * k; a.body.rotation.z = sw * 0.18 * k;
     a.body.position.y = 0.95 - Math.abs(sw) * 0.08 * k;
@@ -79,7 +79,7 @@ const EMOTES = {
     a.legs.forEach((l, i) => { l.rotation.x = Math.max(0, Math.sin(b + i * Math.PI)) * 0.4 * k; });
     a.head.rotation.z = -sw * 0.15 * k; a.head.rotation.x = 0.1 * k;
   } },
-  moonwalk: { name: 'Moonwalk', dur: 4, price: 50, pose(a, t, d) {
+  moonwalk: { name: 'Moonwalk', dur: 4, price: 105, pose(a, t, d) {
     // Slide backwards for most of it, then glide back to the start.
     // Turned side-on so the slide shows.
     const k = ramp(t, d), p = t / d, s = Math.sin(t * 7);
@@ -91,7 +91,7 @@ const EMOTES = {
     a.arms[0].rotation.z = -0.15 * k; a.arms[1].rotation.z = 0.15 * k;
     a.head.rotation.z = 0.12 * k;
   } },
-  worm: { name: 'The Worm', dur: 3.6, price: 50, pose(a, t, d) {
+  worm: { name: 'The Worm', dur: 3.6, price: 105, pose(a, t, d) {
     // Drop to the floor face down, then ripple like a worm.
     const k = ramp(t, d, 0.4), b = t * 6;
     a.root.rotation.y = Math.PI / 2 * k; // side-on so the wiggle shows
@@ -101,7 +101,7 @@ const EMOTES = {
     a.arms.forEach(arm => { arm.rotation.x = (1.3 + Math.sin(b) * 0.35) * k; });
     a.head.rotation.x = (0.5 + Math.sin(b - 0.8) * 0.2) * k;
   } },
-  ransom: { name: 'Ransom', dur: 3.4, price: 50, pose(a, t, d) {
+  ransom: { name: 'Ransom', dur: 3.4, price: 105, pose(a, t, d) {
     // Bouncy arm rolls in front, nodding to the beat.
     const k = ramp(t, d), b = t * 7, s = Math.sin(b), c = Math.cos(b);
     a.body.position.y = 0.95 - Math.abs(s) * 0.07 * k; a.body.rotation.z = Math.sin(b / 2) * 0.12 * k;
@@ -110,7 +110,7 @@ const EMOTES = {
     a.legs.forEach((l, i) => { l.rotation.x = Math.max(0, Math.sin(b / 2 + i * Math.PI)) * 0.35 * k; });
     a.head.rotation.x = s * 0.12 * k;
   } },
-  thatway: { name: 'I Want It That Way', dur: 4.2, price: 50, pose(a, t, d) {
+  thatway: { name: 'I Want It That Way', dur: 4.2, price: 105, pose(a, t, d) {
     // Hand on heart, reach out to the crowd, then point to the sky.
     const k = ramp(t, d), toReach = smooth(1.2, 1.6, t), toSky = smooth(2.6, 3.0, t);
     a.arms[1].rotation.x = k * mix(mix(1.6, 1.4, toReach), 0.3, toSky);
