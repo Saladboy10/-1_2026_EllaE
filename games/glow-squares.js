@@ -1,6 +1,7 @@
 // Glow Squares: you and 11 computer players stand on a floor of squares. Each round some squares
 // glow; when the countdown hits zero the dark squares drop away and anyone not on a glowing square
-// falls out. Only 2 fit on a square (1 in the final), so the last to arrive on a full square falls too.
+// falls out. Normally 2 fit on a square; every 3rd round is a special round where the number changes
+// (1, 3 or 4). The squares show it, and the last to arrive on a full square falls too.
 // There's always one spot too few, players bump each other, and the last one standing wins.
 // Loaded by index.html after rail-rush.js: everyone is a Dodge and Weave character (buildAvatar),
 // you wear your own look, and coins go into the same bank.
@@ -22,7 +23,7 @@
   let renderer, scene, camera, tiles = [], people = [], me = null;
   let active = false, state = 'menu', last = 0, best = store.get('best', 0);
   // Round phases: 'rest' (squares all normal) -> 'glow' (countdown) -> 'drop' (dark squares fall) -> 'rest'...
-  let phase = 'rest', phaseT = 0, round = 0, glowColor = GLOWS[0], survived = 0, clock = 0;
+  let phase = 'rest', phaseT = 0, round = 0, glowColor = GLOWS[0], survived = 0, clock = 0, roundCap = 2;
   const input = { x: 0, y: 0 }, keys = {};
 
   // ---------- Shared with Dodge and Weave ----------
@@ -78,6 +79,20 @@
     }
     return true;
   }
+  // The "people on it / how many fit" sign that floats over a glowing square.
+  function countTag() {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 64;
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false }));
+    s.userData.canvas = c; s.scale.set(1.5, 0.75, 1); s.position.y = 0.9; s.renderOrder = 2; return s;
+  }
+  function paintTag(s, text) {
+    const c = s.userData.canvas, g = c.getContext('2d'), [n, cap] = text.split('/').map(Number);
+    g.clearRect(0, 0, 128, 64);
+    g.font = 'bold 44px Bungee, Nunito, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.lineWidth = 8; g.strokeStyle = '#140b2e'; g.strokeText(text, 64, 34);
+    g.fillStyle = n >= cap ? '#ff5b5b' : '#ffffff'; g.fillText(text, 64, 34);
+    s.material.map.needsUpdate = true;
+  }
   // A name tag that floats over a player's head.
   function nameTag(text, mine) {
     const c = document.createElement('canvas'); c.width = 256; c.height = 64;
@@ -116,17 +131,28 @@
     return i >= 0 && j >= 0 && i < N && j < N ? tiles[i * N + j] : null;
   };
   // How many fit on one square, and how many squares glow: always fewer spots than players.
-  const capacity = () => alive().length <= 2 ? 1 : 2;
+  const capacity = () => roundCap;
+  // How many fit on a square this round: 2, except every 3rd round is special (1, 3 or 4).
+  const special = () => round % 3 === 0;
+  function pickCapacity() {
+    const n = alive().length;
+    if (n <= 2) return 1;
+    if (!special()) return 2;
+    const choices = [1, 3, 4].filter(c => c < n);
+    return choices[Math.floor(Math.random() * choices.length)];
+  }
   const glowCount = () => Math.max(1, Math.floor((alive().length - 1) / capacity()));
   const onTile = t => people.filter(q => q.alive && q.tile === t);
   const countdown = () => Math.max(2, 4.5 - round * 0.25);
   function startGlow() {
-    round++; phase = 'glow'; phaseT = countdown();
+    round++; phase = 'glow'; phaseT = countdown(); roundCap = pickCapacity();
     glowColor = GLOWS[round % GLOWS.length];
     const pool = [...tiles].sort(() => Math.random() - 0.5).slice(0, glowCount());
     for (const t of pool) t.glow = true;
     for (const p of people) if (!p.mine) { p.target = null; p.think = p.react * rand(0.7, 1.3); p.recheck = 0; }
     $('gsRound').textContent = 'Round ' + round;
+    $('gsBanner').textContent = special() && roundCap !== 2 ? `⭐ Special round! ${roundCap} per square ⭐` : `${roundCap} per square`;
+    $('gsBanner').classList.toggle('special', special() && roundCap !== 2);
   }
   function drop() {
     phase = 'drop'; phaseT = 1.6;
@@ -212,10 +238,13 @@
     }
     // Remember when each player stepped onto their square: on a full square, the latecomer falls.
     for (const p of live) { const t = tileAt(p.pos.x, p.pos.z); if (t !== p.tile) { p.tile = t; p.enterT = clock; } }
-    for (const t of tiles) if (t.vy) { t.vy -= GRAVITY * 0.5 * dt; t.y += t.vy * dt; }
+    for (const t of tiles) {
+      if (t.vy) { t.vy -= GRAVITY * 0.5 * dt; t.y += t.vy * dt; }
+      else if (t.y < -0.25) t.y = Math.min(-0.25, t.y + 36 * dt);   // squares rise back up between rounds
+    }
     $('gsLeft').textContent = live.length + ' left';
     const big = $('gsCount');
-    big.hidden = phase !== 'glow';
+    big.hidden = $('gsBanner').hidden = phase !== 'glow';
     if (phase === 'glow') { big.textContent = Math.ceil(phaseT); big.style.color = glowColor; }
   }
 
@@ -227,8 +256,15 @@
       if (tile.glow && phase === 'glow' && onTile(tile).length >= capacity()) { m.color.set('#ffffff'); m.emissive.set('#9a9aa8'); tile.line.material.color.set(glowColor); }   // full!
       else if (tile.glow) { m.color.copy(col); m.emissive.copy(col).multiplyScalar(pulse); tile.line.material.color.set('#ffffff'); }
       else { m.color.set('#3a3358'); m.emissive.set('#000000'); tile.line.material.color.set('#6c5fb0'); }
-      if (phase === 'rest' && tile.y < -0.25) { tile.y = Math.min(-0.25, tile.y + 0.6); }   // squares rise back up
       tile.mesh.position.y = tile.y; tile.mesh.visible = tile.y > -40;
+      // How many are on each glowing square, out of how many fit: "1/3".
+      const showTag = tile.glow && phase === 'glow';
+      if (showTag) {
+        const text = onTile(tile).length + '/' + roundCap;
+        if (!tile.tag) { tile.tag = countTag(); tile.mesh.add(tile.tag); }
+        if (tile.tagText !== text) { tile.tagText = text; paintTag(tile.tag, text); }
+      }
+      if (tile.tag) tile.tag.visible = showTag;
     }
     for (const p of people) {
       const a = p.rig;
@@ -245,15 +281,16 @@
       }
     }
     // The camera watches the whole floor from above, leaning toward you a little.
-    const fx = me ? me.pos.x * 0.25 : 0, fz = me ? me.pos.z * 0.25 : 0;
-    camera.position.set(fx, 23, 12.5 + fz); camera.lookAt(fx, 0, fz + 0.6);
+    // Zoomed in: the camera follows you, but stays far enough back to see the squares around you.
+    const fx = me ? me.pos.x * 0.7 : 0, fz = me ? me.pos.z * 0.7 : 0;
+    camera.position.set(fx, 15, 10 + fz); camera.lookAt(fx, 0, fz + 0.4);
     renderer.render(scene, camera);
   }
 
   // ---------- Screens ----------
   function show(id) {
     for (const p of ['gsMenu', 'gsOver']) $(p).hidden = p !== id;
-    $('gsHud').hidden = state !== 'play'; if (state !== 'play') $('gsCount').hidden = true;
+    $('gsHud').hidden = state !== 'play'; if (state !== 'play') $('gsCount').hidden = $('gsBanner').hidden = true;
   }
   function reset() {
     for (const t of tiles) { t.glow = false; t.y = -0.25; t.vy = 0; }
@@ -346,7 +383,8 @@
     },
     close() { active = false; root.hidden = true; input.x = input.y = 0; for (const k in keys) keys[k] = false; },
     // For tests and demos.
-    _state: () => ({ state, phase, round, left: alive().length, meAlive: me && me.alive, survived, glowing: tiles.filter(t => t.glow).length, pos: me && me.pos.toArray().map(v => +v.toFixed(2)) }),
+    _step: (dt, n = 1) => { for (let i = 0; i < n; i++) { if (phase === "glow") GlowSquares._toGlow(); update(dt); } },
+    _state: () => ({ state, phase, round, cap: roundCap, left: alive().length, meAlive: me && me.alive, survived, glowing: tiles.filter(t => t.glow).length, pos: me && me.pos.toArray().map(v => +v.toFixed(2)) }),
     _toGlow: () => { if (me.tile && me.tile.glow) return; const t = tiles.filter(t => t.glow).sort((a, b) => onTile(a).length - onTile(b).length)[0]; if (t && me) { me.pos.x = t.x; me.pos.z = t.z; } },
   };
 })();
