@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="games/web-swing.css">
 <link rel="stylesheet" href="games/star-catcher.css">
 <link rel="stylesheet" href="games/glow-squares.css">
+<link rel="stylesheet" href="games/tumble-dash.css">
 <style>
   /* Lobby: a full-screen layer over the games. One centered column; game cards in a
      wrapping grid, upcoming games as dashed empty slots. */
@@ -215,16 +216,16 @@
   </section>
 </section>
 
-<section id="starcatcher" aria-label="Star Catcher" hidden>
+<section id="starcatcher" aria-label="Jimmy Yum-Yum" hidden>
   <canvas id="scCanvas"></canvas>
   <button id="scPause" type="button" hidden>Pause</button>
   <section id="scMenu" class="panel center sc-panel">
-    <h1 class="logo">Star Catcher</h1>
+    <h1 class="logo">Jimmy Yum-Yum</h1>
     <div class="stats">
       <div class="stat"><b id="scBest">0</b><span>Best</span></div>
       <div class="stat"><b id="scBank">0</b><span>Coins</span></div>
     </div>
-    <p class="hint">Eat the burgers 🍔 and hot dogs 🌭, dodge the broccoli 🥦 and carrots 🥕. Hearts ❤️ give an extra life. Move with ← →, the mouse or your finger.</p>
+    <p class="hint">Help Jimmy eat the burgers 🍔 and hot dogs 🌭, dodge the broccoli 🥦 and carrots 🥕. Hearts ❤️ give an extra life. Move with ← →, the mouse or your finger.</p>
     <p class="hint"><b>Pick a level</b> (or press Enter to start on Easy):</p>
     <div class="sc-diffs">
       <button class="btn sc-diff" id="sc-easy" type="button"><b>Easy</b><span>It’s a breeze</span></button>
@@ -295,6 +296,48 @@
     <div class="row">
       <button class="btn" id="gsMenuBtn" type="button">Menu</button>
       <button class="btn" id="gsOverLobby" type="button">Lobby</button>
+    </div>
+  </section>
+</section>
+
+<section id="tumbledash" aria-label="Tumble Dash" hidden>
+  <canvas id="tdCanvas"></canvas>
+  <div id="tdHud" hidden><span id="tdPlace">1st / 12</span><span id="tdTime">150s</span></div>
+  <div id="tdBig" hidden>3</div>
+  <div id="tdToast" hidden></div>
+  <div id="tdPad" hidden>
+    <div id="tdStick" hidden><div id="tdKnob"></div></div>
+    <button id="tdJump" type="button" aria-label="Jump">JUMP</button>
+  </div>
+  <section id="tdMenu" class="panel center td-panel">
+    <h1 class="logo">Tumble Dash</h1>
+    <div class="stats">
+      <div class="stat"><b id="tdBest">0</b><span>Best</span></div>
+      <div class="stat"><b id="tdBank">0</b><span>Coins</span></div>
+    </div>
+    <p class="hint">Race 11 other runners to the finish! Jump the spinning sweepers, hop the stepping stones, dodge the giant hammers, ride the moving platforms and watch out for punching walls. Fall off and you go back to the last checkpoint.<br>
+      Keys: WASD or arrows to run, Space to jump. Touch: drag on the screen to run, tap JUMP.</p>
+    <button class="btn primary" id="tdPlay" type="button">Race!</button>
+    <button class="btn" id="tdLobby" type="button">Back to lobby</button>
+  </section>
+  <section id="tdOver" class="panel center td-panel" hidden>
+    <h2 id="tdOverTitle">You made it!</h2>
+    <p class="hint" id="tdPlaceText"></p>
+    <div class="stats">
+      <div class="stat"><b id="tdOverScore">0</b><span>Score</span></div>
+      <div class="stat"><b id="tdOverCoins">0</b><span>Coins</span></div>
+      <div class="stat"><b id="tdOverBest">0</b><span>Best</span></div>
+    </div>
+    <p class="hint" id="tdNote"></p>
+    <div class="board" id="tdBoard" hidden>
+      <h3>Leaderboard</h3>
+      <ol id="tdBoardList"></ol>
+      <p class="hint" id="tdBoardStatus"></p>
+    </div>
+    <button class="btn primary" id="tdAgain" type="button">Race again</button>
+    <div class="row">
+      <button class="btn" id="tdMenuBtn" type="button">Menu</button>
+      <button class="btn" id="tdOverLobby" type="button">Lobby</button>
     </div>
   </section>
 </section>
@@ -370,8 +413,8 @@
       <article class="card">
         <img src="assets/star-catcher.jpg" alt="A cartoon boy with a huge open mouth catching falling burgers and hot dogs under a night sky">
         <div class="card-body">
-          <h3>Star Catcher</h3>
-          <p>Help a hungry boy with a huge mouth gobble falling burgers and hot dogs, and dodge the broccoli and carrots! Easy, Medium or Hard.</p>
+          <h3>Jimmy Yum-Yum</h3>
+          <p>Help Jimmy, a hungry boy with a huge mouth, gobble falling burgers and hot dogs, and dodge the broccoli and carrots! Easy, Medium or Hard.</p>
           <div class="meta">
             <span class="pill">Arcade</span>
             <span class="pill best" id="best-starcatcher" hidden></span>
@@ -394,6 +437,21 @@
           <div class="actions">
             <button class="play" type="button" data-game="glowsquares">Play</button>
             <button class="board-btn" type="button" data-board="glowsquares">Leaderboard</button>
+          </div>
+        </div>
+      </article>
+      <article class="card">
+        <img src="assets/tumble-dash.jpg" alt="Runners racing through an obstacle course in the sky">
+        <div class="card-body">
+          <h3>Tumble Dash</h3>
+          <p>An obstacle-course race in the sky against 11 runners: sweepers, hammers, moving platforms and punching walls!</p>
+          <div class="meta">
+            <span class="pill">Obstacle race</span>
+            <span class="pill best" id="best-tumbledash" hidden></span>
+          </div>
+          <div class="actions">
+            <button class="play" type="button" data-game="tumbledash">Play</button>
+            <button class="board-btn" type="button" data-board="tumbledash">Leaderboard</button>
           </div>
         </div>
       </article>
@@ -424,12 +482,17 @@
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
   </div>
-  <div class="leaders" id="top-starcatcher" data-board="starcatcher" data-title="Star Catcher" data-unit="">
+  <div class="leaders" id="top-starcatcher" data-board="starcatcher" data-title="Jimmy Yum-Yum" data-unit="">
     <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
   </div>
   <div class="leaders" id="top-glowsquares" data-board="glowsquares" data-title="Glow Squares" data-unit="">
+    <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
+    <ol class="top"></ol>
+    <p class="leaders-note">Loading scores…</p>
+  </div>
+  <div class="leaders" id="top-tumbledash" data-board="tumbledash" data-title="Tumble Dash" data-unit="">
     <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
@@ -443,15 +506,16 @@
 <script src="games/web-swing.js"></script>
 <script src="games/star-catcher.js"></script>
 <script src="games/glow-squares.js"></script>
+<script src="games/tumble-dash.js"></script>
 <script>
 // Lobby: shows the game cards and hands control to a game when Play is pressed.
 (() => {
-  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher, glowsquares: () => window.GlowSquares };
+  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher, glowsquares: () => window.GlowSquares, tumbledash: () => window.TumbleDash };
   const lobby = document.getElementById('lobby');
   const readBest = key => { try { return Number(JSON.parse(localStorage.getItem(key))) || 0; } catch { return 0; } };
 
   function refresh() {
-    for (const [id, unit] of [['railrush', ''], ['webswing', ''], ['starcatcher', ''], ['glowsquares', '']]) {
+    for (const [id, unit] of [['railrush', ''], ['webswing', ''], ['starcatcher', ''], ['glowsquares', ''], ['tumbledash', '']]) {
       const best = readBest(id + '.best'), pill = document.getElementById('best-' + id);
       pill.hidden = !best; pill.textContent = 'Best ' + best + unit;
     }

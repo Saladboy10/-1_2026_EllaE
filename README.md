@@ -19,7 +19,7 @@ skin requests don't work (they need the Claude version's shared storage); codes 
 
 ## How it's organized
 - `index.html` is the lobby. Every game lives inside this one page; the lobby covers the screen until you press Play.
-- `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `web-swing.js`/`web-swing.css` for Web Swing, `star-catcher.js`/`star-catcher.css` for Star Catcher, `glow-squares.js`/`glow-squares.css` for Glow Squares).
+- `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `web-swing.js`/`web-swing.css` for Web Swing, `star-catcher.js`/`star-catcher.css` for Jimmy Yum-Yum, `glow-squares.js`/`glow-squares.css` for Glow Squares, `tumble-dash.js`/`tumble-dash.css` for Tumble Dash).
 - `leaderboard.js` runs the shared storage: leaderboards, limited secret codes and skin requests. Each game has its own board with every player's best score.
   Boards work in the published game; opened as a plain file, the games still play but the board stays hidden.
 - `assets/` holds the pictures on the lobby cards.
@@ -54,8 +54,8 @@ A 3D superhero city at sunset, with glass skyscrapers, water towers, traffic, re
 - **Climb:** run into a wall to climb it, and jump to kick off it.
 - You have 90 seconds to grab as many coins as you can. Your score is the number of coins, it has its own leaderboard, and the coins go into the Dodge and Weave bank.
 
-## Star Catcher
-A hungry cartoon boy with a huge mouth. Move him under the falling burgers and hot dogs to gobble them
+## Jimmy Yum-Yum (`star-catcher.js`)
+Jimmy, a hungry cartoon boy with a huge mouth. Move him under the falling burgers and hot dogs to gobble them
 (10 points each), and keep away from the broccoli and carrots (they cost a life). Hearts give an extra life, up to 5.
 
 - **Move:** ← → (or A / D), the mouse, or your finger. **P** pauses.
@@ -71,3 +71,11 @@ Fewer squares glow each round and players bump each other. Last one standing win
 - **Move:** WASD or the arrow keys, or drag your finger anywhere (a joystick appears under it).
 - Sparkly: twinkling stars, sparkles fizzing off the glowing squares, a glitter trail behind you, sparkle bursts when someone falls and confetti when you win.
 - **Score:** 10 points a round survived, plus 50 for winning. Coins: 1 a round, plus 10 for winning. It has its own leaderboard.
+
+## Tumble Dash
+An obstacle-course race in the sky against 11 computer runners (like Stumble Guys). Jump the spinning sweepers, hop the
+stepping stones, dodge the giant hammers on the bridge, ride the moving platforms and get past the punching walls to the finish.
+Fall off and you go back to the last checkpoint (green flags).
+
+- **Move:** WASD or the arrow keys, Space to jump. Touch: drag on the screen to run, tap the JUMP button.
+- **Score:** the better your place, the more points (1st = 120) and coins. 150 seconds to finish. Its own leaderboard.

@@ -1,4 +1,4 @@
-// Star Catcher: a hungry boy catches falling burgers and hot dogs in his huge mouth, dodges the
+// Jimmy Yum-Yum (files and storage keep the old "star catcher" name): a hungry boy named Jimmy catches falling burgers and hot dogs in his huge mouth, dodges the
 // broccoli and carrots, and grabs hearts for extra lives.
 // Every burger or hot dog caught also adds a coin to the Dodge and Weave bank. Loaded by index.html after rail-rush.js.
 (() => {
