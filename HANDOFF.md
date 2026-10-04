@@ -23,8 +23,9 @@ between accounts, so this page is the summary of what was built and how to carry
   hot dogs and dodges broccoli and carrots. Food is also coins for the Dodge and Weave bank; it has its own leaderboard.
 - **Glow Squares (`games/glow-squares.js`, `games/glow-squares.css`)**: a 3D party game against 11 computer players; stand on
   the glowing squares before the countdown ends or fall. Uses `buildAvatar` for everyone; its own leaderboard.
-- **Tumble Dash (`games/tumble-dash.js`, `games/tumble-dash.css`)**: a Stumble Guys-style obstacle race against 11 computer
-  runners with sweepers, stepping stones, hammers, moving platforms, punching walls and checkpoints; its own leaderboard.
+- **Tumble Dash (`games/tumble-dash.js`, `games/tumble-dash.css`)**: Stumble Guys-style party games against 11 computer
+  runners. A wheel picks one of four games (`MODES` in the file): Obstacle Race, Block Dash, Tile Fall and Spin Zone.
+  Each mode has `build`, `tick`, `hit`, `bot` and `camera`; add a new one there to put it on the wheel. Its own leaderboard.
 - **Shared storage (`leaderboard.js`)**: leaderboards, secret codes limited to a number of players, and skin requests.
 - **Secrets**: secret codes and the secret "unlock everything" runner name are stored scrambled (`codeHash`)
   in `games/rail-rush.js`. They are deliberately not written anywhere in plain text. The owner knows them.

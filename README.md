@@ -73,9 +73,13 @@ Fewer squares glow each round and players bump each other. Last one standing win
 - **Score:** 10 points a round survived, plus 50 for winning. Coins: 1 a round, plus 10 for winning. It has its own leaderboard.
 
 ## Tumble Dash
-An obstacle-course race in the sky against 11 computer runners (like Stumble Guys). Jump the spinning sweepers, hop the
-stepping stones, dodge the giant hammers on the bridge, ride the moving platforms and get past the punching walls to the finish.
-Fall off and you go back to the last checkpoint (green flags).
+Stumble Guys-style party games against 11 computer runners. Each time you play, a wheel picks one of four games at random
+(never the same one twice in a row):
 
-- **Move:** WASD or the arrow keys, Space to jump. Touch: drag on the screen to run, tap the JUMP button.
-- **Score:** the better your place, the more points (1st = 120) and coins. 150 seconds to finish. Its own leaderboard.
+- 🏁 **Obstacle Race:** sweepers, stepping stones, a bridge of swinging hammers, moving platforms and punching walls. Fall off and you go back to the last checkpoint (green flags). Your place decides your score (1st = 120).
+- 🧱 **Block Dash:** walls of blocks slide toward you. Run through the gaps or jump the low yellow blocks; tall blocks push you off the back.
+- ⬡ **Tile Fall:** three floors of hexagon tiles; each tile flashes and drops a moment after someone steps on it. Fall through all three and you're out.
+- 🌀 **Spin Zone:** spinning bars on a round platform that keep speeding up (a second bar joins later). Jump them or get knocked off.
+
+In the survival games, last to the end wins (100 points + 5 for each player knocked out). Coins go into the Dodge and Weave bank.
+**Move:** WASD or the arrow keys, Space to jump. Touch: drag on the screen to run, tap the JUMP button. Its own leaderboard.

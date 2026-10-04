@@ -302,7 +302,12 @@
 
 <section id="tumbledash" aria-label="Tumble Dash" hidden>
   <canvas id="tdCanvas"></canvas>
-  <div id="tdHud" hidden><span id="tdPlace">1st / 12</span><span id="tdTime">150s</span></div>
+  <div id="tdHud" hidden><span id="tdPlace">1st / 12</span><span id="tdMode"></span><span id="tdTime">150s</span></div>
+  <div id="tdWheel" hidden>
+    <h2>Picking a game…</h2>
+    <ul id="tdWheelList"></ul>
+    <p id="tdWheelTip"></p>
+  </div>
   <div id="tdBig" hidden>3</div>
   <div id="tdToast" hidden></div>
   <div id="tdPad" hidden>
@@ -315,9 +320,9 @@
       <div class="stat"><b id="tdBest">0</b><span>Best</span></div>
       <div class="stat"><b id="tdBank">0</b><span>Coins</span></div>
     </div>
-    <p class="hint">Race 11 other runners to the finish! Jump the spinning sweepers, hop the stepping stones, dodge the giant hammers, ride the moving platforms and watch out for punching walls. Fall off and you go back to the last checkpoint.<br>
+    <p class="hint">Party games against 11 other runners! A wheel picks the game: 🏁 <b>Obstacle Race</b>, 🧱 <b>Block Dash</b>, ⬡ <b>Tile Fall</b> or 🌀 <b>Spin Zone</b>.<br>
       Keys: WASD or arrows to run, Space to jump. Touch: drag on the screen to run, tap JUMP.</p>
-    <button class="btn primary" id="tdPlay" type="button">Race!</button>
+    <button class="btn primary" id="tdPlay" type="button">Spin the wheel!</button>
     <button class="btn" id="tdLobby" type="button">Back to lobby</button>
   </section>
   <section id="tdOver" class="panel center td-panel" hidden>
@@ -334,7 +339,7 @@
       <ol id="tdBoardList"></ol>
       <p class="hint" id="tdBoardStatus"></p>
     </div>
-    <button class="btn primary" id="tdAgain" type="button">Race again</button>
+    <button class="btn primary" id="tdAgain" type="button">Play another game</button>
     <div class="row">
       <button class="btn" id="tdMenuBtn" type="button">Menu</button>
       <button class="btn" id="tdOverLobby" type="button">Lobby</button>
@@ -444,9 +449,9 @@
         <img src="assets/tumble-dash.jpg" alt="Runners racing through an obstacle course in the sky">
         <div class="card-body">
           <h3>Tumble Dash</h3>
-          <p>An obstacle-course race in the sky against 11 runners: sweepers, hammers, moving platforms and punching walls!</p>
+          <p>Party games in the sky against 11 runners! A wheel picks: Obstacle Race, Block Dash, Tile Fall or Spin Zone.</p>
           <div class="meta">
-            <span class="pill">Obstacle race</span>
+            <span class="pill">Party games</span>
             <span class="pill best" id="best-tumbledash" hidden></span>
           </div>
           <div class="actions">
