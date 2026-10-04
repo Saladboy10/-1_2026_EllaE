@@ -225,7 +225,7 @@
       <div class="stat"><b id="scBest">0</b><span>Best</span></div>
       <div class="stat"><b id="scBank">0</b><span>Coins</span></div>
     </div>
-    <p class="hint">Help Jimmy eat the burgers 🍔 and hot dogs 🌭, dodge the broccoli 🥦 and carrots 🥕. Hearts ❤️ give an extra life. Move with ← →, the mouse or your finger.</p>
+    <p class="hint">Help Jimmy eat the burgers 🍔 and hot dogs 🌭, dodge the broccoli 🥦 and carrots 🥕. Hearts ❤️ give an extra life. Last 20 seconds to reach the next level; beat all 3 levels to win! Move with ← →, the mouse or your finger.</p>
     <p class="hint"><b>Pick a level</b> (or press Enter to start on Easy):</p>
     <div class="sc-diffs">
       <button class="btn sc-diff" id="sc-easy" type="button"><b>Easy</b><span>It’s a breeze</span></button>
@@ -241,7 +241,7 @@
     <button class="btn" id="scPausedLobby" type="button">Lobby</button>
   </section>
   <section id="scOver" class="panel center sc-panel" hidden>
-    <h2>Game over <small id="scOverMode"></small></h2>
+    <h2><span id="scOverTitle">Game over</span> <small id="scOverMode"></small></h2>
     <div class="stats">
       <div class="stat"><b id="scOverScore">0</b><span>Score</span></div>
       <div class="stat"><b id="scOverCoins">0</b><span>Coins</span></div>
@@ -507,6 +507,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="leaderboard.js"></script>
+<script src="celebrate.js"></script>
 <script src="games/rail-rush.js"></script>
 <script src="games/web-swing.js"></script>
 <script src="games/star-catcher.js"></script>

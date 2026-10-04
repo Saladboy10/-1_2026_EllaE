@@ -13,7 +13,8 @@
 
   let W = 400, H = 600, active = false, last = 0, shake = 0;
   let state = 'menu';                         // menu | play | paused | over
-  // Three difficulties. `level` still goes up every 100 points and makes each one a little faster.
+  // Three difficulties, and 3 levels in every game: last 20 seconds to move up a level (each one is
+  // faster, with more vegetables), and beat Level 3 to win. `level` is how fast things fall.
   // Harder modes give more points per food, so the one leaderboard stays fair.
   const DIFFS = {
     easy: { name: 'Easy', points: 5, veg: l => Math.min(0.08 + l * 0.01, 0.18), heart: 0.06, speed: l => 90 + l * 10, every: l => Math.max(0.8, 1.2 - l * 0.03), count: () => 1 },
@@ -21,7 +22,8 @@
     hard: { name: 'Hard', points: 20, veg: l => Math.min(0.38 + l * 0.02, 0.5), heart: 0.03, speed: l => 220 + l * 30, every: l => Math.max(0.1, 0.28 - l * 0.02), count: () => 2 + (Math.random() < 0.4 ? 1 : 0) },
   };
   let diff = 'easy';                          // you start on Easy unless you pick another level
-  let player, items, particles, score, lives, level, spawnTimer, stars, best = store.get('best', 0);
+  const LEVEL_TIME = 20, LEVELS = 3, LEVEL_SPEED = [1, 4, 7];
+  let player, items, particles, score, lives, level, spawnTimer, stars, stage, stageT, banner, best = store.get('best', 0);
   const keys = {};
   let pointerX = null;
   const twinkles = Array.from({ length: 120 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.5 + 0.3, p: Math.random() * Math.PI * 2 }));
@@ -39,7 +41,7 @@
   function reset() {
     player = { x: W / 2, y: H - 95, w: 90, h: 30, speed: 520, open: 0, chew: 0, hurt: 0, move: 0, look: 0 };
     items = []; particles = [];
-    score = 0; lives = 3; level = 1; spawnTimer = 0; stars = 0;
+    score = 0; lives = 3; level = 1; spawnTimer = 0; stars = 0; stage = 1; stageT = 0; banner = { text: 'Level 1', t: 1.6 };
   }
   function spawn() {
     const D = DIFFS[diff];
@@ -93,8 +95,18 @@
     items = items.filter(it => !it.dead);
     for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; p.life -= dt; }
     particles = particles.filter(p => p.life > 0);
-    level = 1 + Math.floor(stars / 10);
-    if (lives <= 0) gameOver();
+    level = LEVEL_SPEED[stage - 1];
+    banner.t = Math.max(0, banner.t - dt);
+    if (lives <= 0) return gameOver(false);
+    // Last 20 seconds to move up a level; last through Level 3 and you win.
+    stageT += dt;
+    if (stageT >= LEVEL_TIME) {
+      if (stage >= LEVELS) return gameOver(true);
+      stage++; stageT = 0;
+      banner = { text: `Level ${stage}!`, t: 1.8 };
+      items = items.filter(it => it.type !== 'broccoli' && it.type !== 'carrot');   // a fresh start for the new level
+      burst(player.x, player.y - 40, '#ffd34d', 30);
+    }
   }
 
   // ---------- Drawing ----------
@@ -223,7 +235,17 @@
       drawBoy(t);
       ctx.fillStyle = '#f4f1ff'; ctx.font = 'bold 22px Nunito, system-ui, sans-serif'; ctx.textBaseline = 'top';
       ctx.textAlign = 'left'; ctx.fillText(`Score ${score}`, 16, 16);
-      ctx.font = '16px Nunito, system-ui, sans-serif'; ctx.fillText(`${DIFFS[diff].name}   Level ${level}   Best ${best}`, 16, 44);
+      ctx.font = '16px Nunito, system-ui, sans-serif'; ctx.fillText(`${DIFFS[diff].name}   Level ${stage} of ${LEVELS}   Best ${best}`, 16, 44);
+      // How long until the next level: a bar along the top.
+      const k = stageT / LEVEL_TIME, bw = Math.min(260, W - 32);
+      ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.beginPath(); ctx.roundRect(16, 68, bw, 10, 5); ctx.fill();
+      ctx.fillStyle = '#ffd34d'; ctx.beginPath(); ctx.roundRect(16, 68, Math.max(10, bw * k), 10, 5); ctx.fill();
+      ctx.fillStyle = '#f4f1ff'; ctx.font = '13px Nunito, system-ui, sans-serif'; ctx.fillText(`${Math.ceil(LEVEL_TIME - stageT)}s to ${stage < LEVELS ? 'Level ' + (stage + 1) : 'win!'}`, 16, 84);
+      if (banner.t > 0) {                               // big "Level 2!" in the middle
+        ctx.save(); ctx.globalAlpha = Math.min(1, banner.t * 2); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = `bold ${Math.min(72, W / 7)}px Bungee, Nunito, system-ui, sans-serif`; ctx.lineWidth = 8; ctx.strokeStyle = '#1b1530';
+        ctx.strokeText(banner.text, W / 2, H * 0.38); ctx.fillStyle = '#ffd34d'; ctx.fillText(banner.text, W / 2, H * 0.38); ctx.restore();
+      }
       ctx.textAlign = 'right'; ctx.font = '22px system-ui, sans-serif';
       ctx.fillText('❤️'.repeat(Math.max(lives, 0)), W - 16, 16);
     }
@@ -241,13 +263,15 @@
     if (state === 'play') { state = 'paused'; show('scPaused'); }
     else if (state === 'paused') { state = 'play'; show(null); last = performance.now(); }
   }
-  function gameOver() {
+  function gameOver(won) {
     state = 'over';
+    if (won) { score += DIFFS[diff].points * 10; stars += 10; Celebrate.win(); }   // a bonus (and a party) for beating all 3 levels
     addCoins(stars);
+    $('scOverTitle').textContent = won ? 'You beat all 3 levels! 🏆' : 'Game over';
     const newBest = score > best; if (newBest) { best = score; store.set('best', best); }
     $('scOverMode').textContent = DIFFS[diff].name;
     $('scOverScore').textContent = score; $('scOverCoins').textContent = stars; $('scOverBest').textContent = best;
-    $('scNote').textContent = newBest ? 'New best score! 🎉' : `You have ${bankNow()} coins to spend in Dodge and Weave.`;
+    $('scNote').textContent = (won ? 'Jimmy is full! ' : `You reached Level ${stage}. `) + (newBest ? 'New best score! 🎉' : `You have ${bankNow()} coins to spend in Dodge and Weave.`);
     $('scBoardStatus').textContent = score > 0 ? 'Saving your score…' : '';
     show('scOver');
     if (score > 0) Leaderboard.submit('starcatcher', { name: playerName() || 'Mystery Catcher', score }).then(r => {
@@ -304,6 +328,8 @@
   window.StarCatcher = {
     open() { root.hidden = false; active = true; resize(); toMenu(); last = performance.now(); requestAnimationFrame(loop); },
     close() { if (state === 'play') state = 'paused'; active = false; root.hidden = true; for (const k in keys) keys[k] = false; },
-    _state: () => ({ state, diff, items: items && items.length, score, lives, level, stars, x: player && player.x }),
+    _step: (dt, n = 1) => { for (let i = 0; i < n && state === 'play'; i++) update(dt); },
+    _lives: n => { lives = n; },
+    _state: () => ({ state, diff, stage, stageT: stageT && +stageT.toFixed(1), items: items && items.length, score, lives, level, stars, x: player && player.x }),
   };
 })();

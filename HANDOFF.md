@@ -26,6 +26,7 @@ between accounts, so this page is the summary of what was built and how to carry
 - **Tumble Dash (`games/tumble-dash.js`, `games/tumble-dash.css`)**: Stumble Guys-style party games against 11 computer
   runners. A wheel picks one of four games (`MODES` in the file): Obstacle Race, Block Dash, Tile Fall and Spin Zone.
   Each mode has `build`, `tick`, `hit`, `bot` and `camera`; add a new one there to put it on the wheel. Its own leaderboard.
+- **Win celebration (`celebrate.js`)**: `Celebrate.win()` shows a giant rainbow "YOU WON!" with confetti; the games call it when you win.
 - **Shared storage (`leaderboard.js`)**: leaderboards, secret codes limited to a number of players, and skin requests.
 - **Secrets**: secret codes and the secret "unlock everything" runner name are stored scrambled (`codeHash`)
   in `games/rail-rush.js`. They are deliberately not written anywhere in plain text. The owner knows them.

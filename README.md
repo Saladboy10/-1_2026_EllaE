@@ -20,6 +20,7 @@ skin requests don't work (they need the Claude version's shared storage); codes 
 ## How it's organized
 - `index.html` is the lobby. Every game lives inside this one page; the lobby covers the screen until you press Play.
 - `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `web-swing.js`/`web-swing.css` for Web Swing, `star-catcher.js`/`star-catcher.css` for Jimmy Yum-Yum, `glow-squares.js`/`glow-squares.css` for Glow Squares, `tumble-dash.js`/`tumble-dash.css` for Tumble Dash).
+- `celebrate.js` is the win party every game shares: a giant bouncing rainbow "YOU WON!" and confetti (Jimmy Yum-Yum after Level 3, Glow Squares, and Tumble Dash when you're 1st or survive).
 - `leaderboard.js` runs the shared storage: leaderboards, limited secret codes and skin requests. Each game has its own board with every player's best score.
   Boards work in the published game; opened as a plain file, the games still play but the board stays hidden.
 - `assets/` holds the pictures on the lobby cards.
@@ -60,7 +61,8 @@ Jimmy, a hungry cartoon boy with a huge mouth. Move him under the falling burger
 
 - **Move:** ← → (or A / D), the mouse, or your finger. **P** pauses.
 - **Levels:** Easy (a breeze, 5 points a food), Medium (a bit challenging, 10 points) or Hard (everything falls at once, 20 points). If you don't pick one, it starts on Easy.
-- It gets faster every 10 foods. Every burger and hot dog is also a coin in the Dodge and Weave bank.
+- **3 levels in every game:** last 20 seconds to move up a level (faster, with more vegetables); beat Level 3 to win a bonus.
+- Every burger and hot dog is also a coin in the Dodge and Weave bank.
 - It has its own leaderboard in the lobby.
 
 ## Glow Squares

@@ -576,6 +576,7 @@
       title = done ? (left === 1 ? 'Last one standing! 👑' : 'You survived! 🏆') : 'You’re out!';
       text = done ? (left === 1 ? 'Everyone else got knocked out.' : `You and ${left - 1} others made it to the end.`) : `You came ${ordinal(place)} out of ${RUNNERS}.`;
     }
+    if (mode.race ? done && place === 1 : done) Celebrate.win();      // 1st in the race, or still in at the end
     addCoins(coins);
     const newBest = score > best; if (newBest) { best = score; store.set('best', best); }
     $('tdOverTitle').textContent = title;

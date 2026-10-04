@@ -385,6 +385,7 @@
   function start() { reset(); state = 'play'; show(null); $('gsRound').textContent = 'Get ready!'; }
   function finish(won) {
     state = 'over';
+    if (won) Celebrate.win();
     if (won) for (let k = 0; k < 6; k++) burst(me.pos.x + rand(-2, 2), 1.5, me.pos.z + rand(-2, 2), GLOWS, 30, 7);   // confetti sparkles!
     const left = alive().length, place = won ? 1 : left + 1;
     const score = survived * 10 + (won ? 50 : 0), coins = survived + (won ? 10 : 0);
