@@ -15,6 +15,8 @@ between accounts, so this page is the summary of what was built and how to carry
   coins, a crash-screen leaderboard, anime-style characters (toon shading, outlines, anime eyes and hair),
   an avatar maker (skin, hair, eyes, expression, mouth, clothes, hats, extras, name), skins, pets and emotes
   bought with coins (tap once to try, again to buy), and a Codes box in the top-left of the menu.
+- **Pets**: Milo the pup (50), Tails the fox (50) and Ember, a baby dragon with flapping wings (75).
+  Pets are built in `buildPet` in `games/rail-rush.js` (Ember has its own `buildDragon`) and listed in the `pet` row near the top of that file.
 - **Shared storage (`leaderboard.js`)**: leaderboards, secret codes limited to a number of players, and skin requests.
 - **Secrets**: secret codes and the secret "unlock everything" runner name are stored scrambled (`codeHash`)
   in `games/rail-rush.js`. They are deliberately not written anywhere in plain text. The owner knows them.
@@ -49,6 +51,11 @@ Open a Claude Code session on the web with this repository and branch, then ask 
 
 A new artifact starts with an empty leaderboard, no code claims and no requests; players' coins and
 unlocks are saved per device and per link, so they also start fresh on the new link.
+
+## Sharing with a friend
+- **Code:** add them as a collaborator on GitHub (repo **Settings → Collaborators → Add people**).
+- **The conversation:** chats can't be moved to another account, so this page is the summary. They can open
+  Claude Code on the web with this repository and branch and say: "Read HANDOFF.md and keep building the game."
 
 ## Testing locally
 Open `index.html` in a browser. Everything plays; the leaderboard, codes limit and requests stay hidden
