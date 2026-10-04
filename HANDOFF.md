@@ -28,6 +28,7 @@ between accounts, so this page is the summary of what was built and how to carry
   Each mode has `build`, `tick`, `hit`, `bot` and `camera`; add a new one there to put it on the wheel. Its own leaderboard.
 - **Skin Shop**: the avatar maker (`#custom` in `games/rail-rush.js`, shown with Dodge and Weave's 3D view) opens from the lobby with `Lobby.shop()` / `RailRush.openShop()`, first thing on every visit and from the lobby's Skin Shop button. Dodge and Weave no longer has its own shop button. All games share one coin bank (`railrush.bank`), shown in the lobby.
 - **Honeycomb**: its own lobby game, built on the Tumble Dash engine (`MODES.honey`, `window.Honeycomb`): five floors of honey hexagons that drop when stepped on. Its own leaderboard (`honeycomb`).
+- **Monster Drive (`games/monster-drive.js`, `games/monster-drive.css`)**: a Drive Mad-style truck game with 8 levels (`LEVELS` at the top of the file: ground and bridge pieces as point lists). The truck is 4 points held by sticks (2D physics) drawn in 3D. Its leaderboard (`monsterdrive`) counts levels beaten.
 - **Win celebration (`celebrate.js`)**: `Celebrate.win()` shows a giant rainbow "YOU WON!" with confetti; the games call it when you win.
 - **Shared storage (`leaderboard.js`)**: leaderboards, secret codes limited to a number of players, and skin requests.
 - **Secrets**: secret codes and the secret "unlock everything" runner name are stored scrambled (`codeHash`)
@@ -55,6 +56,8 @@ Open a Claude Code session on the web with this repository and branch, then ask 
       { "path": "tumbledash/{self}", "write": "interact" },
       { "path": "honeycomb", "read": "view", "write": "owner" },
       { "path": "honeycomb/{self}", "write": "interact" },
+      { "path": "monsterdrive", "read": "view", "write": "owner" },
+      { "path": "monsterdrive/{self}", "write": "interact" },
       { "path": "claims", "read": "view", "write": "owner" },
       { "path": "claims/{self}", "write": "interact" },
       { "path": "codelocks", "read": "interact", "write": "interact" },
@@ -66,7 +69,7 @@ Open a Claude Code session on the web with this repository and branch, then ask 
 }
 ```
 
-   and the supporting files `assets/rail-rush.jpg`, `assets/web-swing.jpg`, `assets/star-catcher.jpg`, `assets/glow-squares.jpg`, `assets/tumble-dash.jpg` and `assets/honeycomb.jpg`, published at those same paths.
+   and the supporting files `assets/rail-rush.jpg`, `assets/web-swing.jpg`, `assets/star-catcher.jpg`, `assets/glow-squares.jpg`, `assets/tumble-dash.jpg`, `assets/honeycomb.jpg` and `assets/monster-drive.jpg`, published at those same paths.
 
 3. Share it from the artifact's Share menu. On a school (organization) account, choosing
    "Anyone in your organization" as **Contributor** lets every classmate save scores, use codes and send requests.

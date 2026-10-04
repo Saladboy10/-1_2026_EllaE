@@ -20,7 +20,7 @@ skin requests don't work (they need the Claude version's shared storage); codes 
 ## How it's organized
 - **Skin Shop:** every time Level Up opens, the Skin Shop comes up first so you pick your skin; the 👕 Skin Shop button in the lobby opens it any time. Your skin is used in every game. Coins from all the games add up in one bank, shown in the lobby next to the button.
 - `index.html` is the lobby. Every game lives inside this one page; the lobby covers the screen until you press Play.
-- `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `web-swing.js`/`web-swing.css` for Web Swing, `star-catcher.js`/`star-catcher.css` for Jimmy Yum-Yum, `glow-squares.js`/`glow-squares.css` for Glow Squares, `tumble-dash.js`/`tumble-dash.css` for Tumble Dash).
+- `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `web-swing.js`/`web-swing.css` for Web Swing, `star-catcher.js`/`star-catcher.css` for Jimmy Yum-Yum, `glow-squares.js`/`glow-squares.css` for Glow Squares, `tumble-dash.js`/`tumble-dash.css` for Tumble Dash (and Honeycomb), `monster-drive.js`/`monster-drive.css` for Monster Drive).
 - `celebrate.js` is the win party every game shares: a giant bouncing rainbow "YOU WON!" and confetti (Jimmy Yum-Yum after Level 3, Glow Squares, and Tumble Dash when you're 1st or survive).
 - `leaderboard.js` runs the shared storage: leaderboards, limited secret codes and skin requests. Each game has its own board with every player's best score.
   Boards work in the published game; opened as a plain file, the games still play but the board stays hidden.
@@ -90,3 +90,11 @@ In the survival games, last to the end wins (100 points + 5 for each player knoc
 Like Honey Drop in Stumble Guys: five floors of honey hexagon tiles over a pool of honey, with bees buzzing round. Each tile
 flashes and drops a moment after someone steps on it. Fall into the honey and you're out; last one standing wins.
 It runs on the Tumble Dash engine (`MODES.honey` in `games/tumble-dash.js`, opened as `window.Honeycomb`) and has its own leaderboard.
+
+## Monster Drive
+Like Drive Mad: drive a chunky monster truck over hills, wooden bridges, ramp jumps and stairs to the checkered flag. 8 levels
+that unlock one by one (First Drive, Bumpy Hills, Big Jump, Stairs, Bridge Islands, Mega Jump, Mountain Climb, The Final Run).
+Flip onto your roof or fall in the water and the level starts again.
+
+- **Drive:** → or D (in the air it tips the truck back). **Reverse:** ← or A (tips it forward). **R** tries again. On a tablet, hold the big ▶ and ◀ buttons.
+- Each new level beaten gives 20 coins (5 for replays). The leaderboard counts how many levels you've beaten.

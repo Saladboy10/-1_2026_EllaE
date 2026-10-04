@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="games/star-catcher.css">
 <link rel="stylesheet" href="games/glow-squares.css">
 <link rel="stylesheet" href="games/tumble-dash.css">
+<link rel="stylesheet" href="games/monster-drive.css">
 <style>
   /* Lobby: a full-screen layer over the games. One centered column; game cards in a
      wrapping grid, upcoming games as dashed empty slots. */
@@ -354,6 +355,41 @@
   </section>
 </section>
 
+<section id="monsterdrive" aria-label="Monster Drive" hidden>
+  <canvas id="mdCanvas"></canvas>
+  <div id="mdHud" hidden>
+    <button class="md-icon" id="mdMenuBtn" type="button" aria-label="Levels">☰</button>
+    <span id="mdLevelName">Level 1</span>
+    <span id="mdTime">0.0s</span>
+    <button class="md-icon" id="mdRetry" type="button" aria-label="Try again">↻</button>
+  </div>
+  <div id="mdToast" hidden></div>
+  <div id="mdPads" hidden>
+    <button class="md-pedal" id="mdBack" type="button" aria-label="Reverse">◀</button>
+    <button class="md-pedal" id="mdGas" type="button" aria-label="Drive">▶</button>
+  </div>
+  <section id="mdMenu" class="panel center md-panel">
+    <h1 class="logo">Monster Drive</h1>
+    <div class="stats">
+      <div class="stat"><b id="mdBest">0</b><span>Levels done</span></div>
+      <div class="stat"><b id="mdBank">0</b><span>Coins</span></div>
+    </div>
+    <p class="hint">Drive to the checkered flag without flipping over or falling in the water! → drive, ← reverse (in the air they tip the truck). On a tablet, hold ▶ and ◀.</p>
+    <div class="md-levels" id="mdLevels"></div>
+    <button class="btn" id="mdLobby" type="button">Back to lobby</button>
+  </section>
+  <section id="mdWin" class="panel center md-panel" hidden>
+    <h2 id="mdWinTitle">Level complete!</h2>
+    <p class="hint" id="mdWinText"></p>
+    <button class="btn primary" id="mdNext" type="button">Next level</button>
+    <div class="row">
+      <button class="btn" id="mdAgain" type="button">Again</button>
+      <button class="btn" id="mdWinLevels" type="button">Levels</button>
+      <button class="btn" id="mdWinLobby" type="button">Lobby</button>
+    </div>
+  </section>
+</section>
+
 <section id="lobby" aria-label="Game lobby">
 <div class="corner-actions">
   <button class="req-btn" id="inboxBtn" type="button" hidden>Inbox</button>
@@ -486,6 +522,21 @@
           </div>
         </div>
       </article>
+      <article class="card">
+        <img src="assets/monster-drive.jpg" alt="A yellow monster truck driving over hills and bridges">
+        <div class="card-body">
+          <h3>Monster Drive</h3>
+          <p>Drive a monster truck over hills, bridges, jumps and stairs to the finish flag. 8 levels. Don’t flip over!</p>
+          <div class="meta">
+            <span class="pill">Driving</span>
+            <span class="pill best" id="best-monsterdrive" hidden></span>
+          </div>
+          <div class="actions">
+            <button class="play" type="button" data-game="monsterdrive">Play</button>
+            <button class="board-btn" type="button" data-board="monsterdrive">Leaderboard</button>
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 
@@ -533,6 +584,11 @@
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
   </div>
+  <div class="leaders" id="top-monsterdrive" data-board="monsterdrive" data-title="Monster Drive" data-unit=" levels">
+    <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Levels</span></div>
+    <ol class="top"></ol>
+    <p class="leaders-note">Loading scores…</p>
+  </div>
 </main>
 </section>
 
@@ -544,10 +600,11 @@
 <script src="games/star-catcher.js"></script>
 <script src="games/glow-squares.js"></script>
 <script src="games/tumble-dash.js"></script>
+<script src="games/monster-drive.js"></script>
 <script>
 // Lobby: shows the game cards and hands control to a game when Play is pressed.
 (() => {
-  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher, glowsquares: () => window.GlowSquares, tumbledash: () => window.TumbleDash, honeycomb: () => window.Honeycomb };
+  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher, glowsquares: () => window.GlowSquares, tumbledash: () => window.TumbleDash, honeycomb: () => window.Honeycomb, monsterdrive: () => window.MonsterDrive };
   const lobby = document.getElementById('lobby');
   const readBest = key => { try { return Number(JSON.parse(localStorage.getItem(key))) || 0; } catch { return 0; } };
 
@@ -556,6 +613,7 @@
       const best = readBest(id + '.best'), pill = document.getElementById('best-' + id);
       pill.hidden = !best; pill.textContent = 'Best ' + best + unit;
     }
+    try { const n = (JSON.parse(localStorage.getItem('monsterdrive.done')) || []).length, pill = document.getElementById('best-monsterdrive'); pill.hidden = !n; pill.textContent = n + ' / 8 levels'; } catch {}
     // Coins from every game go into one bank.
     let coins = 0; try { coins = bank; } catch { coins = readBest('railrush.bank'); }
     document.getElementById('lobbyCoins').textContent = coins;
