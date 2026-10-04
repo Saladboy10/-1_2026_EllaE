@@ -15,6 +15,8 @@ between accounts, so this page is the summary of what was built and how to carry
   coins, a crash-screen leaderboard, anime-style characters (toon shading, outlines, anime eyes and hair),
   an avatar maker (skin, hair, eyes, expression, mouth, clothes, hats, extras, name), skins, pets and emotes
   bought with coins (tap once to try, again to buy), and a Codes box in the top-left of the menu.
+- **Sky Hop (`games/sky-hop.js`, `games/sky-hop.css`)**: an endless platform jumper with moving, breaking and spring
+  platforms, coins that go into the Dodge and Weave bank, and its own leaderboard.
 - **Shared storage (`leaderboard.js`)**: leaderboards, secret codes limited to a number of players, and skin requests.
 - **Secrets**: secret codes and the secret "unlock everything" runner name are stored scrambled (`codeHash`)
   in `games/rail-rush.js`. They are deliberately not written anywhere in plain text. The owner knows them.
@@ -31,6 +33,8 @@ Open a Claude Code session on the web with this repository and branch, then ask 
     "rules": [
       { "path": "railrush", "read": "view", "write": "owner" },
       { "path": "railrush/{self}", "write": "interact" },
+      { "path": "skyhop", "read": "view", "write": "owner" },
+      { "path": "skyhop/{self}", "write": "interact" },
       { "path": "claims", "read": "view", "write": "owner" },
       { "path": "claims/{self}", "write": "interact" },
       { "path": "codelocks", "read": "interact", "write": "interact" },
@@ -42,7 +46,7 @@ Open a Claude Code session on the web with this repository and branch, then ask 
 }
 ```
 
-   and the supporting file `assets/rail-rush.jpg` published at the path `assets/rail-rush.jpg`.
+   and the supporting files `assets/rail-rush.jpg` and `assets/sky-hop.jpg`, published at those same paths.
 
 3. Share it from the artifact's Share menu. On a school (organization) account, choosing
    "Anyone in your organization" as **Contributor** lets every classmate save scores, use codes and send requests.

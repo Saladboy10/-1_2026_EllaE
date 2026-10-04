@@ -1,0 +1,7 @@
+/* Sky Hop styles. Loaded by index.html after rail-rush.css (it reuses that file's panels and buttons). */
+#skyhop { position: fixed; inset: 0; z-index: 15; background: var(--sky); overflow: hidden; touch-action: none; }
+#hopCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#skyhop .hop-panel { bottom: 24px; text-align: center; }
+#hopHud { position: absolute; left: 0; right: 0; top: 0; padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 14px; display: flex;
+  justify-content: space-between; pointer-events: none; font-family: var(--display); font-size: 1.8rem; color: var(--paper);
+  -webkit-text-stroke: 1px var(--ink); text-shadow: 0 3px 0 var(--ink); font-variant-numeric: tabular-nums; }

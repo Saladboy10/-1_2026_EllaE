@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800&display=swap">
 <link rel="stylesheet" href="games/rail-rush.css">
+<link rel="stylesheet" href="games/sky-hop.css">
 <style>
   /* Lobby: a full-screen layer over the games. One centered column; game cards in a
      wrapping grid, upcoming games as dashed empty slots. */
@@ -173,6 +174,40 @@
 </div>
 
 
+<section id="skyhop" aria-label="Sky Hop" hidden>
+  <canvas id="hopCanvas"></canvas>
+  <div id="hopHud" hidden><span id="hopScore">0 m</span><span><span class="coin"></span> <span id="hopCoins">0</span></span></div>
+  <section id="hopMenu" class="panel center hop-panel">
+    <h1 class="logo">Sky Hop</h1>
+    <div class="stats">
+      <div class="stat"><b id="hopBest">0</b><span>Best (m)</span></div>
+      <div class="stat"><b id="hopBank">0</b><span>Coins</span></div>
+    </div>
+    <p class="hint">Bounce up the platforms! Use ← → or tap the sides of the screen to steer. Springs launch you higher, and cracked platforms break.</p>
+    <button class="btn primary" id="hopPlay" type="button">Hop!</button>
+    <button class="btn" id="hopLobby" type="button">Back to lobby</button>
+  </section>
+  <section id="hopOver" class="panel center hop-panel" hidden>
+    <h2>You fell!</h2>
+    <div class="stats">
+      <div class="stat"><b id="hopOverScore">0</b><span>Height</span></div>
+      <div class="stat"><b id="hopOverCoins">0</b><span>Coins</span></div>
+      <div class="stat"><b id="hopOverBest">0</b><span>Best</span></div>
+    </div>
+    <p class="hint" id="hopNote"></p>
+    <div class="board" id="hopBoard" hidden>
+      <h3>Leaderboard</h3>
+      <ol id="hopBoardList"></ol>
+      <p class="hint" id="hopBoardStatus"></p>
+    </div>
+    <button class="btn primary" id="hopAgain" type="button">Hop again</button>
+    <div class="row">
+      <button class="btn" id="hopMenuBtn" type="button">Menu</button>
+      <button class="btn" id="hopOverLobby" type="button">Lobby</button>
+    </div>
+  </section>
+</section>
+
 <section id="lobby" aria-label="Game lobby">
 <div class="corner-actions">
   <button class="req-btn" id="inboxBtn" type="button" hidden>Inbox</button>
@@ -226,13 +261,27 @@
           </div>
         </div>
       </article>
+      <article class="card">
+        <img src="assets/sky-hop.jpg" alt="An anime hopper bouncing up green, blue and cracked platforms into the sky">
+        <div class="card-body">
+          <h3>Sky Hop</h3>
+          <p>Bounce up an endless tower of platforms. Ride springs, dodge cracked ledges and collect coins for your skins.</p>
+          <div class="meta">
+            <span class="pill">Platform jumper</span>
+            <span class="pill best" id="best-skyhop" hidden></span>
+          </div>
+          <div class="actions">
+            <button class="play" type="button" data-game="skyhop">Play</button>
+            <button class="board-btn" type="button" data-board="skyhop">Leaderboard</button>
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 
   <section aria-labelledby="soon-title">
     <h2 id="soon-title">Coming soon</h2>
     <div class="grid">
-      <div class="slot"><b>?</b><span>Next game</span></div>
       <div class="slot"><b>?</b><span>Next game</span></div>
       <div class="slot"><b>?</b><span>Next game</span></div>
     </div>
@@ -250,22 +299,30 @@
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
   </div>
+  <div class="leaders" id="top-skyhop" data-board="skyhop" data-title="Sky Hop" data-unit=" m">
+    <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Height</span></div>
+    <ol class="top"></ol>
+    <p class="leaders-note">Loading scores…</p>
+  </div>
 </main>
 </section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="leaderboard.js"></script>
 <script src="games/rail-rush.js"></script>
+<script src="games/sky-hop.js"></script>
 <script>
 // Lobby: shows the game cards and hands control to a game when Play is pressed.
 (() => {
-  const GAMES = { railrush: () => window.RailRush };
+  const GAMES = { railrush: () => window.RailRush, skyhop: () => window.SkyHop };
   const lobby = document.getElementById('lobby');
   const readBest = key => { try { return Number(JSON.parse(localStorage.getItem(key))) || 0; } catch { return 0; } };
 
   function refresh() {
-    const best = readBest('railrush.best'), pill = document.getElementById('best-railrush');
-    pill.hidden = !best; pill.textContent = 'Best ' + best;
+    for (const [id, unit] of [['railrush', ''], ['skyhop', ' m']]) {
+      const best = readBest(id + '.best'), pill = document.getElementById('best-' + id);
+      pill.hidden = !best; pill.textContent = 'Best ' + best + unit;
+    }
   }
   window.Lobby = {
     show() { for (const g of Object.values(GAMES)) g()?.close(); refresh(); showHome(); lobby.hidden = false; },
@@ -287,16 +344,16 @@
 
   // Top 20 under each game's card, live.
   const place = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
-  Leaderboard.watch('railrush', 20, rows => {
-    const box = document.getElementById('top-railrush'), list = box.querySelector('ol'), note = box.querySelector('.leaders-note');
+  for (const box of document.querySelectorAll('#leaderPage .leaders')) Leaderboard.watch(box.dataset.board, 20, rows => {
+    const list = box.querySelector('ol'), note = box.querySelector('.leaders-note'), unit = box.dataset.unit || '';
     list.innerHTML = '';
     note.hidden = !!(rows && rows.length);
-    note.textContent = !rows ? 'The leaderboard only works in the Claude version of Level Up.' : 'No scores yet. Play a run to get on the board!';
+    note.textContent = !rows ? 'The leaderboard only works in the Claude version of Level Up.' : 'No scores yet. Play to get on the board!';
     box.querySelector('.leaders-head').hidden = !(rows && rows.length);
     if (!rows) return;
     rows.forEach((row, i) => {
       const li = document.createElement('li'); if (row.me) li.className = 'me';
-      for (const [cls, text] of [['rank', place(i + 1)], ['name', row.name || 'Mystery Runner'], ['pts', row.score]]) {
+      for (const [cls, text] of [['rank', place(i + 1)], ['name', row.name || 'Mystery Player'], ['pts', row.score + unit]]) {
         const span = document.createElement('span'); span.className = cls; span.textContent = text; li.appendChild(span);
       }
       list.appendChild(li);

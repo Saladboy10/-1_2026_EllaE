@@ -19,7 +19,7 @@ skin requests don't work (they need the Claude version's shared storage); codes 
 
 ## How it's organized
 - `index.html` is the lobby. Every game lives inside this one page; the lobby covers the screen until you press Play.
-- `games/` holds each game's own code (`rail-rush.js`, `rail-rush.css`).
+- `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `sky-hop.js`/`sky-hop.css` for Sky Hop).
 - `leaderboard.js` runs the shared storage: leaderboards, limited secret codes and skin requests. Each game has its own board with every player's best score.
   Boards work in the published game; opened as a plain file, the games still play but the board stays hidden.
 - `assets/` holds the pictures on the lobby cards.
@@ -45,3 +45,12 @@ A 3D endless runner. Dodge trains and barriers across three tracks, grab coins, 
 - **Emotes:** Wave, Dance and Floss are free; Spin 50, Jump for Joy 75, Dab 100, and The Duggee, Moonwalk, The Worm, Ransom and I Want It That Way 50 each. Play them from the menu, the avatar maker, or number keys. Tap anything locked once to try it on (or watch the emote) before buying; tap it again to buy.
 - **My own:** skin, hair, eye color, expression (Normal, Happy, Angry, Sad, Surprised, Wink, Cool), mouth (Smile, Big grin, Gritted teeth, Smirk, Shout, Surprised, Frown, Tongue out, Straight), clothes, hats and extras. Outfits with a visible face also let you pick the expression and mouth. Coins you collect are saved and can unlock the Crown (150) and the Cape (100).
 - **Pets** that run beside you (bought with coins): Milo 50, Tails 50
+
+## Sky Hop
+Bounce up an endless tower of platforms. You play as your Dodge and Weave runner, in its colors.
+
+- **Steer:** ← → (or A / D), or press and hold the left or right side of the screen
+- **Green** platforms are solid, **blue** ones slide side to side, **cracked brown** ones break, and **yellow springs** launch you high.
+- Your score is how high you climb (in meters). It has its own leaderboard in the lobby.
+- Coins you grab go into the same coin bank as Dodge and Weave, so you can spend them on skins, pets and emotes.
+
