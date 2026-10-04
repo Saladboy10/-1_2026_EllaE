@@ -18,7 +18,7 @@ between accounts, so this page is the summary of what was built and how to carry
 - **Pets**: Milo the pup (50), Tails the fox (50) and Ember, a baby dragon with flapping wings (75).
   Pets are built in `buildPet` in `games/rail-rush.js` (Ember has its own `buildDragon`) and listed in the `pet` row near the top of that file.
 - **Web Swing (`games/web-swing.js`, `games/web-swing.css`)**: a 3D city where you swing on webs, climb walls and
-  collect coins in 90 seconds as your Dodge and Weave runner. Coins go into the Dodge and Weave bank; it has its own leaderboard.
+  collect coins in 90 seconds as Spider Pig (the default, `buildSpiderPig`) or your Dodge and Weave runner. Coins go into the Dodge and Weave bank; it has its own leaderboard.
 - **Shared storage (`leaderboard.js`)**: leaderboards, secret codes limited to a number of players, and skin requests.
 - **Secrets**: secret codes and the secret "unlock everything" runner name are stored scrambled (`codeHash`)
   in `games/rail-rush.js`. They are deliberately not written anywhere in plain text. The owner knows them.

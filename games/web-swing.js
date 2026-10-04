@@ -1,7 +1,7 @@
 // Web Swing: a 3D superhero city. Run, jump off the rooftops, swing on webs from the skyscrapers
 // and climb up walls, grabbing as many coins as you can before the timer runs out.
-// Loaded by index.html after rail-rush.js: the hero is your Dodge and Weave runner (buildAvatar)
-// and coins go into the same bank.
+// Loaded by index.html after rail-rush.js: you play as Spider Pig, or switch to your Dodge and Weave
+// runner (buildAvatar), and coins go into the same bank.
 (() => {
   const root = document.getElementById('webswing');
   const canvas = document.getElementById('swCanvas');
@@ -107,9 +107,48 @@
     for (const b of buildings) if (x > b.x0 - pad && x < b.x1 + pad && z > b.z0 - pad && z < b.z1 + pad) return b;
     return null;
   }
+  // Spider Pig, the hero you start as: a round pink pig on four trotters, in the same toon style
+  // as the Dodge and Weave characters. Front legs act as arms (one grabs the web), back legs as legs.
+  function buildSpiderPig() {
+    const PINK = '#f590b4', DARK = '#c45b82', HOOF = '#5a3a3a';
+    roundK = 0.8;
+    try {
+      const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+      ball(0.5, PINK, 0, 0.78, 0.05, body, 1, 0.85, 1.35);                                    // round belly
+      const head = new THREE.Group(); head.position.set(0, 1.0, -0.62); body.add(head);
+      ball(0.4, PINK, 0, 0, 0, head);
+      const snout = tube(0.17, 0.19, 0.16, PINK, 0, -0.07, -0.4, head); snout.rotation.x = Math.PI / 2;
+      ball(0.17, DARK, 0, -0.07, -0.48, head, 1, 0.85, 0.12).userData.noLine = true;           // nose disc
+      for (const s of [-1, 1]) {
+        ball(0.04, HOOF, s * 0.065, -0.07, -0.5, head, 1, 1.3, 0.5).userData.noLine = true;      // nostrils
+        ball(0.075, '#ffffff', s * 0.15, 0.13, -0.33, head);                                     // eyes
+        ball(0.045, '#1b1530', s * 0.15, 0.13, -0.395, head).userData.noLine = true;
+        ball(0.015, '#ffffff', s * 0.15 + 0.02, 0.15, -0.44, head).userData.noLine = true;
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.26, 12), mat(PINK));
+        ear.position.set(s * 0.24, 0.33, -0.02); ear.rotation.set(-0.35, 0, -s * 0.5); head.add(ear);
+      }
+      ball(0.06, DARK, 0.14, -0.21, -0.33, head, 1.6, 0.6, 0.5).userData.noLine = true;           // a happy little smile
+      const tail = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.03, 8, 16, Math.PI * 1.6), mat(PINK));
+      tail.position.set(0, 0.95, 0.72); tail.rotation.y = Math.PI / 2; body.add(tail);
+      const arms = [], legs = [];
+      for (const [list, z] of [[arms, -0.38], [legs, 0.45]]) for (const s of [-1, 1]) {
+        const hip = new THREE.Group(); hip.position.set(s * 0.26, 0.46, z); body.add(hip);
+        limb(0.12, 0.1, 0.05, -0.36, PINK, hip);
+        ball(0.1, HOOF, 0, -0.4, 0, hip, 1, 0.75, 1.1);
+        list.push(hip);
+      }
+      root.scale.setScalar(1.35);
+      addOutlines(root);
+      const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.9, 20), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.25 }));
+      shadow.rotation.x = -Math.PI / 2;
+      return { root, body, arms, legs, head, shadow, pig: true };
+    } finally { roundK = 0; }
+  }
+  let heroPick = store.get('hero', 'pig');
+  const heroLabel = () => 'Hero: ' + (heroPick === 'pig' ? 'Spider Pig 🐷' : 'My runner');
   function makeHero() {
     if (hero) { scene.remove(hero.root); scene.remove(hero.shadow); }
-    try { hero = buildAvatar(avatarCfg); } catch { hero = null; return; }
+    try { hero = heroPick === 'pig' ? buildSpiderPig() : buildAvatar(avatarCfg); } catch { hero = null; return; }
     scene.add(hero.root); scene.add(hero.shadow);
   }
 
@@ -253,7 +292,8 @@
     a.root.position.copy(P.pos); a.root.rotation.set(0, P.yaw, 0);
     for (const g of [...a.arms, ...a.legs]) g.rotation.set(0, 0, 0);
     const hv = Math.hypot(P.vel.x, P.vel.z);
-    if (P.climb) {
+    if (a.pig) { animatePig(a, t, hv); }
+    else if (P.climb) {
       const s = Math.sin(t * 12);
       a.arms[0].rotation.x = -2.6 + s * 0.5; a.arms[1].rotation.x = -2.6 - s * 0.5;
       a.legs[0].rotation.x = -0.6 - s * 0.4; a.legs[1].rotation.x = -0.6 + s * 0.4;
@@ -274,6 +314,28 @@
     let ground = 0.32; const b = buildingAt(P.pos.x, P.pos.z); if (b && b.top <= P.pos.y + 0.1) ground = b.top + 0.02;
     a.shadow.position.set(P.pos.x, ground, P.pos.z); a.shadow.visible = !P.climb;
   }
+  function animatePig(a, t, hv) {
+    if (P.climb) {                          // nose up, trotters on the wall, scrambling up
+      const s = Math.sin(t * 14);
+      a.root.rotation.x = Math.PI / 2;
+      a.arms[0].rotation.x = s * 0.7; a.arms[1].rotation.x = -s * 0.7;
+      a.legs[0].rotation.x = -s * 0.7; a.legs[1].rotation.x = s * 0.7;
+    } else if (P.web) {                     // one front trotter holds the web, the rest dangle
+      a.arms[1].rotation.x = -2.7; a.arms[0].rotation.x = -0.4;
+      a.legs[0].rotation.x = 0.5; a.legs[1].rotation.x = 0.3;
+      const rope = P.web.at.clone().sub(P.pos).normalize();
+      a.root.rotation.x = Math.asin(Math.max(-1, Math.min(1, -(rope.x * Math.sin(P.yaw) + rope.z * Math.cos(P.yaw))))) * 0.5;
+    } else if (!P.ground) {                 // flying: legs out like a starfish
+      a.arms[0].rotation.set(-0.7, 0, 0.5); a.arms[1].rotation.set(-0.7, 0, -0.5);
+      a.legs[0].rotation.set(0.7, 0, 0.5); a.legs[1].rotation.set(0.7, 0, -0.5);
+    } else if (hv > 0.5) {                  // galloping trot
+      const s = Math.sin(t * hv * 1.1);
+      a.arms[0].rotation.x = s * 0.8; a.arms[1].rotation.x = -s * 0.8;
+      a.legs[0].rotation.x = -s * 0.8; a.legs[1].rotation.x = s * 0.8;
+      a.body.position.y = Math.abs(s) * 0.08;
+    }
+    a.head.rotation.z = P.ground && hv > 0.5 ? Math.sin(t * 9) * 0.06 : 0;
+  }
   function draw(t, dt) {
     animateHero(t, dt);
     // Camera behind and above you.
@@ -292,7 +354,7 @@
     camera.lookAt(target);
 
     if (P.web) {
-      const hand = V(P.pos.x, P.pos.y + 2.2, P.pos.z);
+      const hand = V(P.pos.x, P.pos.y + (hero && hero.pig ? 1.9 : 2.2), P.pos.z);
       webLine.visible = true; webLine.position.copy(hand); webLine.lookAt(P.web.at); webLine.scale.set(1, 1, hand.distanceTo(P.web.at));
     } else webLine.visible = false;
     const aim = state === 'play' && !P.ground && !P.web && !P.climb ? webTarget() : null;
@@ -314,7 +376,7 @@
   }
   function toMenu() {
     state = 'menu'; placeHero();
-    $('swBest').textContent = best; $('swBank').textContent = bankNow();
+    $('swBest').textContent = best; $('swBank').textContent = bankNow(); $('swHero').textContent = heroLabel();
     show('swMenu');
   }
   function start() {
@@ -397,6 +459,10 @@
   webBtn.addEventListener('pointerdown', e => { e.preventDefault(); try { webBtn.setPointerCapture(e.pointerId); } catch {} press(); });
   for (const ev of ['pointerup', 'pointercancel']) webBtn.addEventListener(ev, release);
   $('swPlay').onclick = start;
+  $('swHero').onclick = () => {             // switch between Spider Pig and your Dodge and Weave runner
+    heroPick = heroPick === 'pig' ? 'runner' : 'pig'; store.set('hero', heroPick);
+    $('swHero').textContent = heroLabel(); makeHero();
+  };
   $('swAgain').onclick = start;
   $('swMenuBtn').onclick = toMenu;
   for (const id of ['swLobby', 'swOverLobby']) $(id).onclick = () => window.Lobby && Lobby.show();
@@ -429,7 +495,7 @@
     close() { active = false; root.hidden = true; release(); input.x = input.y = 0; for (const k in keys) keys[k] = false; },
     // For tests and demos: advance the game by one step without waiting for the screen.
     _step(dt) { if (state === 'play') update(dt); draw(performance.now() / 1000, dt); },
-    _start: () => start(), _press: () => press(), _release: () => release(), _input: input,
+    _cam: v => { camYaw = v; }, _start: () => start(), _press: () => press(), _release: () => release(), _input: input,
     _state: () => ({ state, pos: P.pos.toArray().map(v => +v.toFixed(2)), vel: P.vel.toArray().map(v => +v.toFixed(2)), ground: P.ground, climb: !!P.climb, web: !!P.web, runCoins, timeLeft }),
   };
 })();

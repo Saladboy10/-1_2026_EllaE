@@ -47,7 +47,7 @@ A 3D endless runner. Dodge trains and barriers across three tracks, grab coins, 
 - **Pets** that run beside you (bought with coins): Milo 50, Tails 50, Ember the dragon 75
 
 ## Web Swing
-A 3D superhero city. You play as your Dodge and Weave runner.
+A 3D superhero city. You play as Spider Pig, or press the Hero button on the menu to switch to your Dodge and Weave runner.
 
 - **Move:** WASD or the arrow keys, or drag on the left half of the screen (a joystick appears under your thumb). Drag elsewhere to turn the camera.
 - **Jump and web:** Space or the red JUMP/WEB button. Jump off a roof, then hold to shoot a web at the nearest skyscraper and swing. Let go to fly.
