@@ -19,6 +19,8 @@ between accounts, so this page is the summary of what was built and how to carry
   Pets are built in `buildPet` in `games/rail-rush.js` (Ember has its own `buildDragon`) and listed in the `pet` row near the top of that file.
 - **Web Swing (`games/web-swing.js`, `games/web-swing.css`)**: a 3D city where you swing on webs, climb walls and
   collect coins in 90 seconds as Spider Pig (the default, `buildSpiderPig`) or your Dodge and Weave runner. Coins go into the Dodge and Weave bank; it has its own leaderboard.
+- **Star Catcher (`games/star-catcher.js`, `games/star-catcher.css`)**: a hungry boy with a huge mouth eats falling burgers and
+  hot dogs and dodges broccoli and carrots. Food is also coins for the Dodge and Weave bank; it has its own leaderboard.
 - **Shared storage (`leaderboard.js`)**: leaderboards, secret codes limited to a number of players, and skin requests.
 - **Secrets**: secret codes and the secret "unlock everything" runner name are stored scrambled (`codeHash`)
   in `games/rail-rush.js`. They are deliberately not written anywhere in plain text. The owner knows them.
@@ -37,6 +39,8 @@ Open a Claude Code session on the web with this repository and branch, then ask 
       { "path": "railrush/{self}", "write": "interact" },
       { "path": "webswing", "read": "view", "write": "owner" },
       { "path": "webswing/{self}", "write": "interact" },
+      { "path": "starcatcher", "read": "view", "write": "owner" },
+      { "path": "starcatcher/{self}", "write": "interact" },
       { "path": "claims", "read": "view", "write": "owner" },
       { "path": "claims/{self}", "write": "interact" },
       { "path": "codelocks", "read": "interact", "write": "interact" },
@@ -48,7 +52,7 @@ Open a Claude Code session on the web with this repository and branch, then ask 
 }
 ```
 
-   and the supporting files `assets/rail-rush.jpg` and `assets/web-swing.jpg`, published at those same paths.
+   and the supporting files `assets/rail-rush.jpg`, `assets/web-swing.jpg` and `assets/star-catcher.jpg`, published at those same paths.
 
 3. Share it from the artifact's Share menu. On a school (organization) account, choosing
    "Anyone in your organization" as **Contributor** lets every classmate save scores, use codes and send requests.

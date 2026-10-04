@@ -19,7 +19,7 @@ skin requests don't work (they need the Claude version's shared storage); codes 
 
 ## How it's organized
 - `index.html` is the lobby. Every game lives inside this one page; the lobby covers the screen until you press Play.
-- `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `web-swing.js`/`web-swing.css` for Web Swing).
+- `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `web-swing.js`/`web-swing.css` for Web Swing, `star-catcher.js`/`star-catcher.css` for Star Catcher).
 - `leaderboard.js` runs the shared storage: leaderboards, limited secret codes and skin requests. Each game has its own board with every player's best score.
   Boards work in the published game; opened as a plain file, the games still play but the board stays hidden.
 - `assets/` holds the pictures on the lobby cards.
@@ -53,3 +53,11 @@ A 3D superhero city at sunset, with glass skyscrapers, water towers, traffic, re
 - **Jump and web:** Space or the red JUMP/WEB button. Jump off a roof, then hold to shoot a web at the nearest skyscraper and swing. Let go to fly.
 - **Climb:** run into a wall to climb it, and jump to kick off it.
 - You have 90 seconds to grab as many coins as you can. Your score is the number of coins, it has its own leaderboard, and the coins go into the Dodge and Weave bank.
+
+## Star Catcher
+A hungry cartoon boy with a huge mouth. Move him under the falling burgers and hot dogs to gobble them
+(10 points each), and keep away from the broccoli and carrots (they cost a life). Hearts give an extra life, up to 5.
+
+- **Move:** ← → (or A / D), the mouse, or your finger. **P** pauses.
+- It gets faster every 100 points. Every burger and hot dog is also a coin in the Dodge and Weave bank.
+- It has its own leaderboard in the lobby.

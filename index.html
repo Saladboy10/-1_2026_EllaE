@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800&display=swap">
 <link rel="stylesheet" href="games/rail-rush.css">
 <link rel="stylesheet" href="games/web-swing.css">
+<link rel="stylesheet" href="games/star-catcher.css">
 <style>
   /* Lobby: a full-screen layer over the games. One centered column; game cards in a
      wrapping grid, upcoming games as dashed empty slots. */
@@ -213,6 +214,47 @@
   </section>
 </section>
 
+<section id="starcatcher" aria-label="Star Catcher" hidden>
+  <canvas id="scCanvas"></canvas>
+  <button id="scPause" type="button" hidden>Pause</button>
+  <section id="scMenu" class="panel center sc-panel">
+    <h1 class="logo">Star Catcher</h1>
+    <div class="stats">
+      <div class="stat"><b id="scBest">0</b><span>Best</span></div>
+      <div class="stat"><b id="scBank">0</b><span>Coins</span></div>
+    </div>
+    <p class="hint">Help the hungry boy eat the falling burgers 🍔 and hot dogs 🌭, and dodge the broccoli 🥦 and carrots 🥕. Hearts ❤️ give you an extra life.
+      Every burger and hot dog is also a coin for Dodge and Weave!<br>Move with ← → or A D, the mouse, or your finger. Press P to pause.</p>
+    <button class="btn primary" id="scPlay" type="button">Play</button>
+    <button class="btn" id="scLobby" type="button">Back to lobby</button>
+  </section>
+  <section id="scPaused" class="panel center sc-panel" hidden>
+    <h2>Paused</h2>
+    <p class="hint">Take a breather.</p>
+    <button class="btn primary" id="scResume" type="button">Resume</button>
+    <button class="btn" id="scPausedLobby" type="button">Lobby</button>
+  </section>
+  <section id="scOver" class="panel center sc-panel" hidden>
+    <h2>Game over</h2>
+    <div class="stats">
+      <div class="stat"><b id="scOverScore">0</b><span>Score</span></div>
+      <div class="stat"><b id="scOverCoins">0</b><span>Coins</span></div>
+      <div class="stat"><b id="scOverBest">0</b><span>Best</span></div>
+    </div>
+    <p class="hint" id="scNote"></p>
+    <div class="board" id="scBoard" hidden>
+      <h3>Leaderboard</h3>
+      <ol id="scBoardList"></ol>
+      <p class="hint" id="scBoardStatus"></p>
+    </div>
+    <button class="btn primary" id="scAgain" type="button">Play again</button>
+    <div class="row">
+      <button class="btn" id="scMenuBtn" type="button">Menu</button>
+      <button class="btn" id="scOverLobby" type="button">Lobby</button>
+    </div>
+  </section>
+</section>
+
 <section id="lobby" aria-label="Game lobby">
 <div class="corner-actions">
   <button class="req-btn" id="inboxBtn" type="button" hidden>Inbox</button>
@@ -281,13 +323,27 @@
           </div>
         </div>
       </article>
+      <article class="card">
+        <img src="assets/star-catcher.jpg" alt="A cartoon boy with a huge open mouth catching falling burgers and hot dogs under a night sky">
+        <div class="card-body">
+          <h3>Star Catcher</h3>
+          <p>Help a hungry boy with a huge mouth gobble falling burgers and hot dogs, and dodge the broccoli and carrots! Every bite is a coin.</p>
+          <div class="meta">
+            <span class="pill">Arcade</span>
+            <span class="pill best" id="best-starcatcher" hidden></span>
+          </div>
+          <div class="actions">
+            <button class="play" type="button" data-game="starcatcher">Play</button>
+            <button class="board-btn" type="button" data-board="starcatcher">Leaderboard</button>
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 
   <section aria-labelledby="soon-title">
     <h2 id="soon-title">Coming soon</h2>
     <div class="grid">
-      <div class="slot"><b>?</b><span>Next game</span></div>
       <div class="slot"><b>?</b><span>Next game</span></div>
     </div>
   </section>
@@ -309,6 +365,11 @@
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
   </div>
+  <div class="leaders" id="top-starcatcher" data-board="starcatcher" data-title="Star Catcher" data-unit="">
+    <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
+    <ol class="top"></ol>
+    <p class="leaders-note">Loading scores…</p>
+  </div>
 </main>
 </section>
 
@@ -316,15 +377,16 @@
 <script src="leaderboard.js"></script>
 <script src="games/rail-rush.js"></script>
 <script src="games/web-swing.js"></script>
+<script src="games/star-catcher.js"></script>
 <script>
 // Lobby: shows the game cards and hands control to a game when Play is pressed.
 (() => {
-  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing };
+  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher };
   const lobby = document.getElementById('lobby');
   const readBest = key => { try { return Number(JSON.parse(localStorage.getItem(key))) || 0; } catch { return 0; } };
 
   function refresh() {
-    for (const [id, unit] of [['railrush', ''], ['webswing', '']]) {
+    for (const [id, unit] of [['railrush', ''], ['webswing', ''], ['starcatcher', '']]) {
       const best = readBest(id + '.best'), pill = document.getElementById('best-' + id);
       pill.hidden = !best; pill.textContent = 'Best ' + best + unit;
     }
