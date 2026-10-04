@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="games/rail-rush.css">
 <link rel="stylesheet" href="games/web-swing.css">
 <link rel="stylesheet" href="games/star-catcher.css">
+<link rel="stylesheet" href="games/glow-squares.css">
 <style>
   /* Lobby: a full-screen layer over the games. One centered column; game cards in a
      wrapping grid, upcoming games as dashed empty slots. */
@@ -259,6 +260,44 @@
   </section>
 </section>
 
+<section id="glowsquares" aria-label="Glow Squares" hidden>
+  <canvas id="gsCanvas"></canvas>
+  <div id="gsHud" hidden><span id="gsRound">Get ready!</span><span id="gsLeft">12 left</span></div>
+  <div id="gsCount" hidden>5</div>
+  <div id="gsStick" hidden><div id="gsKnob"></div></div>
+  <section id="gsMenu" class="panel center gs-panel">
+    <h1 class="logo">Glow Squares</h1>
+    <div class="stats">
+      <div class="stat"><b id="gsBest">0</b><span>Best</span></div>
+      <div class="stat"><b id="gsBank">0</b><span>Coins</span></div>
+    </div>
+    <p class="hint">Some squares glow. Get onto one before the countdown hits zero! Everyone on a dark square falls. <b>Only 2 fit on a square</b> (it turns white when full), so the last one to squeeze on falls too. Be the last one standing!<br>
+      Move with WASD or the arrows, or drag your finger.</p>
+    <button class="btn primary" id="gsPlay" type="button">Play</button>
+    <button class="btn" id="gsLobby" type="button">Back to lobby</button>
+  </section>
+  <section id="gsOver" class="panel center gs-panel" hidden>
+    <h2 id="gsOverTitle">You fell!</h2>
+    <p class="hint" id="gsPlace"></p>
+    <div class="stats">
+      <div class="stat"><b id="gsOverScore">0</b><span>Score</span></div>
+      <div class="stat"><b id="gsOverCoins">0</b><span>Coins</span></div>
+      <div class="stat"><b id="gsOverBest">0</b><span>Best</span></div>
+    </div>
+    <p class="hint" id="gsNote"></p>
+    <div class="board" id="gsBoard" hidden>
+      <h3>Leaderboard</h3>
+      <ol id="gsBoardList"></ol>
+      <p class="hint" id="gsBoardStatus"></p>
+    </div>
+    <button class="btn primary" id="gsAgain" type="button">Play again</button>
+    <div class="row">
+      <button class="btn" id="gsMenuBtn" type="button">Menu</button>
+      <button class="btn" id="gsOverLobby" type="button">Lobby</button>
+    </div>
+  </section>
+</section>
+
 <section id="lobby" aria-label="Game lobby">
 <div class="corner-actions">
   <button class="req-btn" id="inboxBtn" type="button" hidden>Inbox</button>
@@ -342,6 +381,21 @@
           </div>
         </div>
       </article>
+      <article class="card">
+        <img src="assets/glow-squares.jpg" alt="Players racing to glowing squares on a floating floor">
+        <div class="card-body">
+          <h3>Glow Squares</h3>
+          <p>Race 11 other players to the glowing squares before the countdown ends. Only 2 fit on each one, and everyone else falls! Last one standing wins.</p>
+          <div class="meta">
+            <span class="pill">Party</span>
+            <span class="pill best" id="best-glowsquares" hidden></span>
+          </div>
+          <div class="actions">
+            <button class="play" type="button" data-game="glowsquares">Play</button>
+            <button class="board-btn" type="button" data-board="glowsquares">Leaderboard</button>
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 
@@ -374,6 +428,11 @@
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
   </div>
+  <div class="leaders" id="top-glowsquares" data-board="glowsquares" data-title="Glow Squares" data-unit="">
+    <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
+    <ol class="top"></ol>
+    <p class="leaders-note">Loading scores…</p>
+  </div>
 </main>
 </section>
 
@@ -382,15 +441,16 @@
 <script src="games/rail-rush.js"></script>
 <script src="games/web-swing.js"></script>
 <script src="games/star-catcher.js"></script>
+<script src="games/glow-squares.js"></script>
 <script>
 // Lobby: shows the game cards and hands control to a game when Play is pressed.
 (() => {
-  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher };
+  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher, glowsquares: () => window.GlowSquares };
   const lobby = document.getElementById('lobby');
   const readBest = key => { try { return Number(JSON.parse(localStorage.getItem(key))) || 0; } catch { return 0; } };
 
   function refresh() {
-    for (const [id, unit] of [['railrush', ''], ['webswing', ''], ['starcatcher', '']]) {
+    for (const [id, unit] of [['railrush', ''], ['webswing', ''], ['starcatcher', ''], ['glowsquares', '']]) {
       const best = readBest(id + '.best'), pill = document.getElementById('best-' + id);
       pill.hidden = !best; pill.textContent = 'Best ' + best + unit;
     }

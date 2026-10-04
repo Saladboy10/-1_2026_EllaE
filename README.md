@@ -19,7 +19,7 @@ skin requests don't work (they need the Claude version's shared storage); codes 
 
 ## How it's organized
 - `index.html` is the lobby. Every game lives inside this one page; the lobby covers the screen until you press Play.
-- `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `web-swing.js`/`web-swing.css` for Web Swing, `star-catcher.js`/`star-catcher.css` for Star Catcher).
+- `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `web-swing.js`/`web-swing.css` for Web Swing, `star-catcher.js`/`star-catcher.css` for Star Catcher, `glow-squares.js`/`glow-squares.css` for Glow Squares).
 - `leaderboard.js` runs the shared storage: leaderboards, limited secret codes and skin requests. Each game has its own board with every player's best score.
   Boards work in the published game; opened as a plain file, the games still play but the board stays hidden.
 - `assets/` holds the pictures on the lobby cards.
@@ -62,3 +62,11 @@ A hungry cartoon boy with a huge mouth. Move him under the falling burgers and h
 - **Levels:** Easy (a breeze, 5 points a food), Medium (a bit challenging, 10 points) or Hard (everything falls at once, 20 points). If you don't pick one, it starts on Easy.
 - It gets faster every 10 foods. Every burger and hot dog is also a coin in the Dodge and Weave bank.
 - It has its own leaderboard in the lobby.
+
+## Glow Squares
+You and 11 computer players (all Dodge and Weave characters, you in your own look) on a floating floor of squares.
+Each round some squares glow; get onto one before the countdown ends, because the dark squares drop away and anyone on them falls out. Only 2 fit on a square (1 in the final), so the last to squeeze onto a full square falls too.
+Fewer squares glow each round and players bump each other. Last one standing wins (or survive all 15 rounds).
+
+- **Move:** WASD or the arrow keys, or drag your finger anywhere (a joystick appears under it).
+- **Score:** 10 points a round survived, plus 50 for winning. Coins: 1 a round, plus 10 for winning. It has its own leaderboard.
