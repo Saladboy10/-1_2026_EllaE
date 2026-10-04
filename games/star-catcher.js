@@ -13,16 +13,17 @@
 
   let W = 400, H = 600, active = false, last = 0, shake = 0;
   let state = 'menu';                         // menu | play | paused | over
-  // Three difficulties, and 3 levels in every game: last 20 seconds to move up a level (each one is
-  // faster, with more vegetables), and beat Level 3 to win. `level` is how fast things fall.
+  // 3 levels in every game, one for each difficulty: Level 1 is Easy, Level 2 Medium and Level 3 Hard.
+  // Last 20 seconds to move up a level, and beat Level 3 to win. You can also start on Level 2 or 3.
+  // `level` is how fast things fall within a level (it creeps up as the level goes on).
   // Harder modes give more points per food, so the one leaderboard stays fair.
   const DIFFS = {
     easy: { name: 'Easy', points: 5, veg: l => Math.min(0.08 + l * 0.01, 0.18), heart: 0.06, speed: l => 90 + l * 10, every: l => Math.max(0.8, 1.2 - l * 0.03), count: () => 1 },
     medium: { name: 'Medium', points: 10, veg: l => Math.min(0.15 + l * 0.04, 0.45), heart: 0.03, speed: l => 140 + l * 25, every: l => Math.max(0.25, 0.9 - l * 0.06), count: () => 1 },
     hard: { name: 'Hard', points: 20, veg: l => Math.min(0.38 + l * 0.02, 0.5), heart: 0.03, speed: l => 220 + l * 30, every: l => Math.max(0.1, 0.28 - l * 0.02), count: () => 2 + (Math.random() < 0.4 ? 1 : 0) },
   };
-  let diff = 'easy';                          // you start on Easy unless you pick another level
-  const LEVEL_TIME = 20, LEVELS = 3, LEVEL_SPEED = [1, 4, 7];
+  const LEVEL_TIME = 20, LEVELS = 3, ORDER = ['easy', 'medium', 'hard'];
+  let diff = 'easy', firstStage = 1;              // you start on Level 1 (Easy) unless you pick another level
   let player, items, particles, score, lives, level, spawnTimer, stars, stage, stageT, banner, best = store.get('best', 0);
   const keys = {};
   let pointerX = null;
@@ -41,7 +42,7 @@
   function reset() {
     player = { x: W / 2, y: H - 95, w: 90, h: 30, speed: 520, open: 0, chew: 0, hurt: 0, move: 0, look: 0 };
     items = []; particles = [];
-    score = 0; lives = 3; level = 1; spawnTimer = 0; stars = 0; stage = 1; stageT = 0; banner = { text: 'Level 1', t: 1.6 };
+    score = 0; lives = 3; level = 1; spawnTimer = 0; stars = 0; stage = firstStage; stageT = 0; diff = ORDER[stage - 1]; banner = { text: `Level ${stage}: ${DIFFS[diff].name}`, t: 1.8 };
   }
   function spawn() {
     const D = DIFFS[diff];
@@ -95,15 +96,15 @@
     items = items.filter(it => !it.dead);
     for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; p.life -= dt; }
     particles = particles.filter(p => p.life > 0);
-    level = LEVEL_SPEED[stage - 1];
+    level = 1 + Math.floor(stageT / 7);
     banner.t = Math.max(0, banner.t - dt);
     if (lives <= 0) return gameOver(false);
     // Last 20 seconds to move up a level; last through Level 3 and you win.
     stageT += dt;
     if (stageT >= LEVEL_TIME) {
       if (stage >= LEVELS) return gameOver(true);
-      stage++; stageT = 0;
-      banner = { text: `Level ${stage}!`, t: 1.8 };
+      stage++; stageT = 0; diff = ORDER[stage - 1];
+      banner = { text: `Level ${stage}: ${DIFFS[diff].name}!`, t: 2 };
       items = items.filter(it => it.type !== 'broccoli' && it.type !== 'carrot');   // a fresh start for the new level
       burst(player.x, player.y - 40, '#ffd34d', 30);
     }
@@ -235,7 +236,7 @@
       drawBoy(t);
       ctx.fillStyle = '#f4f1ff'; ctx.font = 'bold 22px Nunito, system-ui, sans-serif'; ctx.textBaseline = 'top';
       ctx.textAlign = 'left'; ctx.fillText(`Score ${score}`, 16, 16);
-      ctx.font = '16px Nunito, system-ui, sans-serif'; ctx.fillText(`${DIFFS[diff].name}   Level ${stage} of ${LEVELS}   Best ${best}`, 16, 44);
+      ctx.font = '16px Nunito, system-ui, sans-serif'; ctx.fillText(`Level ${stage} of ${LEVELS} (${DIFFS[diff].name})   Best ${best}`, 16, 44);
       // How long until the next level: a bar along the top.
       const k = stageT / LEVEL_TIME, bw = Math.min(260, W - 32);
       ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.beginPath(); ctx.roundRect(16, 68, bw, 10, 5); ctx.fill();
@@ -243,7 +244,7 @@
       ctx.fillStyle = '#f4f1ff'; ctx.font = '13px Nunito, system-ui, sans-serif'; ctx.fillText(`${Math.ceil(LEVEL_TIME - stageT)}s to ${stage < LEVELS ? 'Level ' + (stage + 1) : 'win!'}`, 16, 84);
       if (banner.t > 0) {                               // big "Level 2!" in the middle
         ctx.save(); ctx.globalAlpha = Math.min(1, banner.t * 2); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.font = `bold ${Math.min(72, W / 7)}px Bungee, Nunito, system-ui, sans-serif`; ctx.lineWidth = 8; ctx.strokeStyle = '#1b1530';
+        ctx.font = `bold ${Math.min(64, W / 11)}px Bungee, Nunito, system-ui, sans-serif`; ctx.lineWidth = 8; ctx.strokeStyle = '#1b1530';
         ctx.strokeText(banner.text, W / 2, H * 0.38); ctx.fillStyle = '#ffd34d'; ctx.fillText(banner.text, W / 2, H * 0.38); ctx.restore();
       }
       ctx.textAlign = 'right'; ctx.font = '22px system-ui, sans-serif';
@@ -256,7 +257,7 @@
   function show(id) { for (const p of ['scMenu', 'scOver', 'scPaused']) $(p).hidden = p !== id; $('scPause').hidden = state !== 'play'; }
   function toMenu() { state = 'menu'; reset(); $('scBest').textContent = best; $('scBank').textContent = bankNow(); show('scMenu'); }
   function start(d) {
-    if (typeof d === 'string') diff = d;
+    if (typeof d === 'string') firstStage = ORDER.indexOf(d) + 1;
     reset(); state = 'play'; show(null); last = performance.now();
   }
   function togglePause() {
