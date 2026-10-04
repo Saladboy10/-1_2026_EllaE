@@ -136,7 +136,7 @@ function buy(key, name, price, tryIt) {
     toast(bank >= price ? `Trying ${name}. Tap it again to buy it for ${price} coins.` : `Trying ${name}. It costs ${price} coins and you have ${bank}.`);
     renderCustom(); return false;
   }
-  if (bank < price) { toast(`${name} costs ${price} coins. You have ${bank}. Keep running to collect more!`); return false; }
+  if (bank < price) { toast(`${name} costs ${price} coins. You have ${bank}. Play any game to collect more!`); return false; }
   pendingBuy = null; bank -= price; owned.push(key); store.set('bank', bank); store.set('owned', owned);
   toast(`You bought ${name}!`); refreshMenu(); return true;
 }
@@ -1096,10 +1096,11 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 
 $('#playBtn').onclick = startRun;
 $('#againBtn').onclick = startRun;
-$('#customBtn').onclick = toCustom;
-$('#overCustomBtn').onclick = toCustom;
 $('#overMenuBtn').onclick = toMenu;
-$('#doneBtn').onclick = () => { if (pendingBuy) { pendingBuy = null; rebuildAvatar(); } toMenu(); };
+$('#doneBtn').onclick = () => {
+  if (pendingBuy) { pendingBuy = null; rebuildAvatar(); }
+  if (shopMode) { shopMode = false; window.Lobby && Lobby.show(); } else toMenu();   // the Skin Shop goes back to the lobby
+};
 $('#pauseBtn').onclick = () => state === 'play' ? pause() : resume();
 $('#resumeBtn').onclick = resume;
 $('#quitBtn').onclick = toMenu;
@@ -1349,10 +1350,12 @@ resize();
 
 let last = performance.now();
 // The lobby opens and closes the game; while closed nothing updates or renders.
-let active = false;
+let active = false, shopMode = false;
 window.RailRush = {
-  open() { active = true; last = performance.now(); toMenu(); },
-  close() { active = false; nameTag.hidden = true; },
+  open() { active = true; shopMode = false; last = performance.now(); toMenu(); },
+  // The lobby's Skin Shop: the avatar maker on its own, and Done goes back to the lobby.
+  openShop() { active = true; shopMode = true; last = performance.now(); toCustom(); $('#doneBtn').textContent = 'Pick this skin!'; },
+  close() { active = false; shopMode = false; nameTag.hidden = true; $('#doneBtn').textContent = 'Done'; },
 };
 $('#lobbyLink').onclick = () => window.Lobby && Lobby.show();
 

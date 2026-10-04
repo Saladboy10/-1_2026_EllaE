@@ -26,6 +26,7 @@ between accounts, so this page is the summary of what was built and how to carry
 - **Tumble Dash (`games/tumble-dash.js`, `games/tumble-dash.css`)**: Stumble Guys-style party games against 11 computer
   runners. A wheel picks one of four games (`MODES` in the file): Obstacle Race, Block Dash, Tile Fall and Spin Zone.
   Each mode has `build`, `tick`, `hit`, `bot` and `camera`; add a new one there to put it on the wheel. Its own leaderboard.
+- **Skin Shop**: the avatar maker (`#custom` in `games/rail-rush.js`, shown with Dodge and Weave's 3D view) opens from the lobby with `Lobby.shop()` / `RailRush.openShop()`, first thing on every visit and from the lobby's Skin Shop button. Dodge and Weave no longer has its own shop button. All games share one coin bank (`railrush.bank`), shown in the lobby.
 - **Win celebration (`celebrate.js`)**: `Celebrate.win()` shows a giant rainbow "YOU WON!" with confetti; the games call it when you win.
 - **Shared storage (`leaderboard.js`)**: leaderboards, secret codes limited to a number of players, and skin requests.
 - **Secrets**: secret codes and the secret "unlock everything" runner name are stored scrambled (`codeHash`)

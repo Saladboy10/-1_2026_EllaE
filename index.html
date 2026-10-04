@@ -75,6 +75,14 @@
   #lobby .req-btn { font-family: var(--display); font-size: .95rem; padding: 10px 14px; border: 3px solid var(--ink); border-radius: 14px;
     background: var(--paper); color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; }
   #lobby .req-btn.primary { background: var(--signal); }
+  #lobby .me-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+  #lobby .skin-btn { font-family: var(--display); font-size: 1.05rem; padding: 10px 16px; border: 3px solid var(--ink); border-radius: 14px;
+    background: #ff9be0; color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; }
+  #lobby .skin-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  #lobby .wallet { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; padding: 8px 14px; border-radius: 999px;
+    background: var(--paper); border: 3px solid var(--ink); }
+  #lobby .wallet b { font-family: var(--display); font-weight: 400; font-size: 1.1rem; }
+  #lobby .coin-dot { width: 18px; height: 18px; border-radius: 50%; background: #ffcf1a; border: 2px solid var(--ink); }
   #lobby .req-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
   #lobby .req-btn:focus-visible, #lobby textarea:focus-visible, #lobby input:focus-visible { outline: 3px solid var(--spray); outline-offset: 2px; }
   #lobby .req-layer { position: fixed; inset: 0; z-index: 30; background: rgba(27, 21, 48, .45); display: flex; align-items: center; justify-content: center; padding: 16px; }
@@ -114,13 +122,13 @@
     </div>
     <div class="emote-bar" id="menuEmotes" aria-label="Emotes"></div>
     <button class="btn primary" id="playBtn">Run!</button>
-    <button class="btn" id="customBtn">Customize avatar</button>
+    <p class="hint">Change your skin with the Skin Shop button in the lobby.</p>
     <button class="btn" id="lobbyLink" type="button">Back to lobby</button>
   </section>
 
   <section id="custom" class="panel" hidden>
     <header>
-      <h2>Your runner</h2>
+      <h2>Skin Shop</h2>
       <span class="bank"><span class="coin"></span> <span id="customBank">0</span></span>
     </header>
     <label class="name-field" for="runnerName"><span>Name</span>
@@ -148,7 +156,6 @@
     </div>
     <button class="btn primary" id="againBtn">Run again</button>
     <div class="row">
-      <button class="btn" id="overCustomBtn">Avatar</button>
       <button class="btn" id="overMenuBtn">Menu</button>
     </div>
   </section>
@@ -380,6 +387,10 @@
     <h1>Level Up</h1>
     <p class="maker">Made by Ella Edge</p>
     <p class="tagline">Pick a game and press Play. More games are on the way.</p>
+    <div class="me-bar">
+      <button class="skin-btn" id="skinBtn" type="button">👕 Skin Shop</button>
+      <span class="wallet" title="Coins from every game add up here"><span class="coin-dot"></span> <b id="lobbyCoins">0</b> coins</span>
+    </div>
   </header>
 
   <section aria-labelledby="games-title">
@@ -525,12 +536,21 @@
       const best = readBest(id + '.best'), pill = document.getElementById('best-' + id);
       pill.hidden = !best; pill.textContent = 'Best ' + best + unit;
     }
+    // Coins from every game go into one bank.
+    let coins = 0; try { coins = bank; } catch { coins = readBest('railrush.bank'); }
+    document.getElementById('lobbyCoins').textContent = coins;
   }
   window.Lobby = {
     show() { for (const g of Object.values(GAMES)) g()?.close(); refresh(); showHome(); lobby.hidden = false; },
     open(id) { lobby.hidden = true; GAMES[id]()?.open(); },
+    // The Skin Shop (it lives in Dodge and Weave's 3D screen, which shows your character best).
+    shop() { if (!window.RailRush) return; for (const g of Object.values(GAMES)) g()?.close(); lobby.hidden = true; RailRush.openShop(); },
   };
   for (const btn of document.querySelectorAll('#lobby [data-game]')) btn.onclick = () => Lobby.open(btn.dataset.game);
+  document.getElementById('skinBtn').onclick = () => Lobby.shop();
+  refresh();
+  // Every time Level Up opens, you pick your skin first.
+  Lobby.shop();
 
   // Leaderboard screen: one per game, reached from the card's Leaderboard button.
   const home = lobby.querySelector('main:not(#leaderPage)'), leaderPage = document.getElementById('leaderPage');
