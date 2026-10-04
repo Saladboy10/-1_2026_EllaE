@@ -21,7 +21,7 @@ const OPTIONS = {
   hat:       { label: 'Hat', type: 'style', values: [['none', 'None'], ['cap', 'Cap'], ['beanie', 'Beanie'], ['headphones', 'Headphones'], ['crown', 'Crown', 150]] },
   hatColor:  { label: 'Hat & bag color', type: 'color', values: CLOTHES },
   extra:     { label: 'Extra', type: 'style', values: [['none', 'None'], ['glasses', 'Glasses'], ['backpack', 'Backpack'], ['cape', 'Cape', 100]] },
-  pet:       { label: 'Pet', type: 'style', values: [['none', 'None'], ['pup', 'Milo', 50], ['fox', 'Tails', 50]] },
+  pet:       { label: 'Pet', type: 'style', values: [['none', 'None'], ['pup', 'Milo', 50], ['fox', 'Tails', 50], ['dragon', 'Ember', 75]] },
 };
 const DEFAULT_AVATAR = { outfit: 'custom', pet: 'none', expression: 'normal', mouth: 'smile', eyes: '#7a3b2e', skin: '#f1c19b', hair: 'short', hairColor: '#5a3a22', shirt: '#ff4f7b', pants: '#2f80ff',
   shoes: '#ffffff', hat: 'cap', hatColor: '#ffcf1a', extra: 'backpack' };
@@ -670,6 +670,7 @@ const COSTUMES = {
 function buildPet(type) {
   if (!type || type === 'none') return null;
   const g = new THREE.Group(), legs = [];
+  if (type === 'dragon') return buildDragon(g, legs);
   const pup = type === 'pup';
   const main = pup ? '#e9a55c' : '#f5b82e', light = pup ? '#f6dcb0' : '#ffffff';
   box(0.32, 0.3, 0.5, main, 0, 0.36, 0, g);
@@ -697,6 +698,35 @@ function buildPet(type) {
   }
   g.position.set(-0.95, 0, 0.5);
   return { group: g, legs };
+}
+
+// Ember: a small green dragon with flapping wings, horns and a spiky tail.
+function buildDragon(g, legs) {
+  const main = '#3fbf5f', belly = '#f3e08a', spike = '#ff7a2f', wings = [];
+  box(0.34, 0.3, 0.5, main, 0, 0.38, 0, g);
+  box(0.24, 0.22, 0.04, belly, 0, 0.36, -0.25, g);
+  box(0.32, 0.28, 0.3, main, 0, 0.62, -0.34, g);
+  box(0.22, 0.12, 0.14, main, 0, 0.56, -0.54, g);
+  for (const s of [-1, 1]) {
+    box(0.03, 0.03, 0.02, '#1b1530', s * 0.05, 0.6, -0.615, g);
+    box(0.07, 0.08, 0.02, '#ffd23f', s * 0.08, 0.68, -0.495, g);
+    box(0.03, 0.05, 0.025, '#111111', s * 0.08, 0.68, -0.5, g);
+    cone(0.045, 0.16, belly, s * 0.1, 0.83, -0.28, g, -0.4, -s * 0.2);
+    const wing = new THREE.Group(); wing.position.set(s * 0.17, 0.5, -0.05); g.add(wing); wings.push(wing);
+    box(0.36, 0.03, 0.26, spike, s * 0.18, 0, 0.04, wing);
+    box(0.36, 0.035, 0.04, main, s * 0.18, 0.01, -0.09, wing);
+  }
+  for (const z of [-0.12, 0.05, 0.2]) cone(0.05, 0.12, spike, 0, 0.58, z, g);
+  const tail = new THREE.Group(); tail.position.set(0, 0.38, 0.25); tail.rotation.x = 0.35; g.add(tail);
+  box(0.16, 0.14, 0.32, main, 0, 0, 0.16, tail);
+  box(0.1, 0.09, 0.22, main, 0, -0.02, 0.4, tail);
+  cone(0.07, 0.14, spike, 0, -0.02, 0.56, tail, Math.PI / 2, 0);
+  for (const [x, z] of [[-0.11, -0.15], [0.11, -0.15], [-0.11, 0.15], [0.11, 0.15]]) {
+    const leg = new THREE.Group(); leg.position.set(x, 0.24, z); g.add(leg);
+    box(0.1, 0.24, 0.1, main, 0, -0.12, 0, leg); legs.push(leg);
+  }
+  g.position.set(-0.95, 0, 0.5);
+  return { group: g, legs, wings };
 }
 
 function buildAvatar(c) {
@@ -1228,6 +1258,7 @@ function update(dt) {
     if (a.pet) {
       a.pet.legs.forEach((l, i) => { l.rotation.x = Math.sin(animT * 1.2 + (i % 3 ? Math.PI : 0)) * 0.8 * amp; });
       a.pet.group.position.y = Math.abs(Math.sin(animT * 1.2)) * 0.08 * amp;
+      if (a.pet.wings) a.pet.wings.forEach((w, i) => { w.rotation.z = (i ? 1 : -1) * (0.3 + Math.sin(animT * 2.4) * 0.5); });
     }
     if (a.cape) a.cape.rotation.x = -(running ? 0.5 + speed * 0.01 : 0.2) - Math.sin(animT * 2) * 0.08;
     if (state === 'menu') a.root.rotation.y = Math.sin(performance.now() / 1600) * 0.5;
