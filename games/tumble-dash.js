@@ -4,6 +4,8 @@
 //   Block Dash    - walls of blocks slide at you: find the gap or jump the low blocks
 //   Tile Fall     - three floors of hexagon tiles that drop away once someone steps on them
 //   Spin Zone     - spinning bars on a round platform that get faster and faster
+// Honeycomb is its own game in the lobby that uses this engine for just one mode (window.Honeycomb):
+// five floors of honey hexagons that drop when stepped on, over a pool of honey.
 // Loaded by index.html after rail-rush.js: everyone is a Dodge and Weave character (buildAvatar)
 // and coins go into the same bank.
 (() => {
@@ -69,8 +71,9 @@
     const sea = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), mat('#4fb3e8')); sea.rotation.x = -Math.PI / 2; sea.position.y = -45; scene.add(sea);
     level = new THREE.Group(); scene.add(level);
   }
+  function setSky(color) { scene.background.set(color); scene.fog.color.set(color); }
   function clearLevel() {
-    scene.remove(level); level = new THREE.Group(); scene.add(level);
+    scene.remove(level); level = new THREE.Group(); scene.add(level); setSky('#8fd8ff');
     floors = []; sweepers = []; hammers = []; pushers = [];
   }
   function boxFloor(x0, x1, zFar, zNear, color, top = 0, move) {
@@ -409,6 +412,57 @@
     camera(p) { return { pos: V(p.x * 0.5, 15, p.z * 0.5 + 13), look: V(p.x * 0.6, 0, p.z * 0.6) }; },
   };
 
+
+  // ---------- Honeycomb (its own game in the lobby, not on the wheel) ----------
+  // Like Tile Fall but deeper: five floors of honey hexagons over a pool of honey, with bees buzzing round.
+  MODES.honey = Object.assign({}, MODES.tiles, {
+    name: 'Honeycomb', emoji: '🐝', wheel: false, sky: '#ffd98a',
+    tip: 'Honey tiles drop after you step on them! Keep moving and don’t fall into the honey.',
+    time: 100, killY: -42, LAYERS: [0, -9, -18, -27, -36], COLORS: ['#ffc93c', '#ffb627', '#f9a01b', '#f08c12', '#e07a0a'],
+    build() {
+      const size = 1.3, geo = new THREE.CylinderGeometry(1.2, 1.2, 0.6, 6);              // a little gap shows the honeycomb lines
+      this.LAYERS.forEach((top, li) => {
+        for (let q = -6; q <= 6; q++) for (let rr = -6; rr <= 6; rr++) {
+          if (Math.abs(q + rr) > 6) continue;
+          const hx = size * Math.sqrt(3) * (q + rr / 2), hz = size * 1.5 * rr;
+          const m = new THREE.Mesh(geo, mat(this.COLORS[li])); m.rotation.y = Math.PI / 6; m.position.set(hx, top - 0.3, hz); level.add(m);
+          floors.push({ hx, hz, hr: 1.32, top, mesh: m, base: this.COLORS[li], t: -1, vy: 0 });
+        }
+      });
+      // The pool of honey at the bottom, with drips hanging under each floor.
+      const pool = new THREE.Mesh(new THREE.CylinderGeometry(90, 90, 2, 48), new THREE.MeshLambertMaterial({ color: '#d9770a', emissive: '#5a2a00' }));
+      pool.position.y = -44; level.add(pool);                                    // covers the sea, so it's honey all the way down
+      const dripMat = new THREE.MeshLambertMaterial({ color: '#f2a516' });
+      for (const top of this.LAYERS) for (let k = 0; k < 14; k++) {
+        const a = rand(0, 7), d = rand(2, 14), drip = new THREE.Mesh(new THREE.ConeGeometry(0.22, rand(0.8, 1.8), 8), dripMat);
+        drip.rotation.x = Math.PI; drip.position.set(Math.cos(a) * d, top - 1.1, Math.sin(a) * d); level.add(drip);
+      }
+      // Bees flying round in circles.
+      this.bees = [];
+      const yellow = new THREE.MeshLambertMaterial({ color: '#ffd23f' }), black = new THREE.MeshLambertMaterial({ color: '#1b1530' });
+      const wing = new THREE.MeshLambertMaterial({ color: '#ffffff', transparent: true, opacity: 0.75 });
+      for (let k = 0; k < 10; k++) {
+        const g = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.45, 12, 10), yellow); body.scale.set(1, 0.85, 1.35); g.add(body);
+        for (const z of [-0.15, 0.2]) { const band = new THREE.Mesh(new THREE.CylinderGeometry(0.43, 0.43, 0.13, 12), black); band.rotation.x = Math.PI / 2; band.position.z = z; g.add(band); }
+        for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), black); e.position.set(s * 0.17, 0.12, -0.55); g.add(e); }
+        const wings = [-1, 1].map(s => { const w = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), wing); w.scale.set(1, 0.1, 0.6); w.position.set(s * 0.4, 0.38, 0); g.add(w); return w; });
+        level.add(g);
+        this.bees.push({ g, wings, r: rand(12, 20), y: rand(-30, 6), sp: rand(0.25, 0.5) * (Math.random() < 0.5 ? -1 : 1), a: rand(0, 7) });
+      }
+      placeRunners(k => { const a = k / RUNNERS * Math.PI * 2; return [Math.cos(a) * 7, 0, Math.sin(a) * 7]; });
+    },
+    tick(dt) {
+      MODES.tiles.tick.call(this, dt);
+      for (const b of this.bees) {
+        b.a += b.sp * dt;
+        b.g.position.set(Math.cos(b.a) * b.r, b.y + Math.sin(clock * 2 + b.r) * 0.6, Math.sin(b.a) * b.r);
+        b.g.rotation.y = -b.a + (b.sp > 0 ? Math.PI : 0);
+        for (const w of b.wings) w.rotation.z = Math.sin(clock * 50) * 0.5;
+      }
+    },
+  });
+
   // ======================= Running a game =======================
   function moveDir() {
     let ix = input.x, iy = input.y;
@@ -488,7 +542,7 @@
   // The names light up one after another, slowing down, until it stops on a random game.
   let wheel = null;
   function spinWheel() {
-    const list_ = Object.keys(MODES), choice = pick(list_.filter(k => k !== lastMode));
+    const list_ = Object.keys(MODES).filter(k => MODES[k].wheel !== false), choice = pick(list_.filter(k => k !== lastMode));
     const list = $('tdWheelList'); list.innerHTML = '';
     for (const k of list_) { const li = document.createElement('li'); li.dataset.mode = k; li.innerHTML = `<b>${MODES[k].emoji}</b><span>${MODES[k].name}</span>`; list.appendChild(li); }
     const steps = list_.length * 2 + list_.indexOf(choice) + 1;     // two full laps, then land on the choice
@@ -512,7 +566,7 @@
   function beginMode(key) {
     lastMode = key; mode = MODES[key];
     clearLevel(); raceT = 0; finishers = 0; outs = 0;
-    mode.build();
+    mode.build(); if (mode.sky) setSky(mode.sky);
     state = 'countdown'; stateT = 3;
     $('tdMode').textContent = mode.emoji + ' ' + mode.name;
     $('tdHud').hidden = $('tdPad').hidden = false;
@@ -560,6 +614,7 @@
   function start() {
     mode = null; clearLevel(); makeRunners();
     for (const r of runners) r.rig.root.visible = false;
+    if (solo) { show(null); beginMode(solo.mode); return; }
     state = 'wheel'; show(null); spinWheel();
   }
   function finish() {
@@ -578,19 +633,23 @@
     }
     if (mode.race ? done && place === 1 : done) Celebrate.win();      // 1st in the race, or still in at the end
     addCoins(coins);
-    const newBest = score > best; if (newBest) { best = score; store.set('best', best); }
+    const newBest = score > best; if (newBest) { best = score; saveBest(); }
     $('tdOverTitle').textContent = title;
     $('tdPlaceText').textContent = `${mode.emoji} ${mode.name}: ${text}`;
     $('tdOverScore').textContent = score; $('tdOverCoins').textContent = coins; $('tdOverBest').textContent = best;
     $('tdNote').textContent = newBest ? 'New best score!' : `You have ${bankNow()} coins to spend in Dodge and Weave.`;
     $('tdBoardStatus').textContent = score > 0 ? 'Saving your score…' : '';
-    show('tdOver');
-    if (score > 0) Leaderboard.submit('tumbledash', { name: playerName() || 'Mystery Runner', score }).then(r => {
+    show('tdOver'); renderBoard();
+    if (score > 0) Leaderboard.submit(solo ? solo.board : 'tumbledash', { name: playerName() || 'Mystery Runner', score }).then(r => {
       $('tdBoardStatus').textContent = r.ok ? (r.improved ? 'Your new best is on the leaderboard!' : `Your best is still ${r.best}.`)
         : r.reason === 'offline' ? '' : r.reason === 'readonly' ? 'You need more access to add scores. Ask the owner to give you access.' : 'Your score couldn’t be saved this time.';
     });
   }
-  Leaderboard.watch('tumbledash', 5, rows => {
+  // Tumble Dash and Honeycomb each have their own leaderboard; the end screen shows the one you played.
+  const boards = {};
+  for (const b of ['tumbledash', 'honeycomb']) Leaderboard.watch(b, 5, rows => { boards[b] = rows; renderBoard(); });
+  function renderBoard() {
+    const rows = boards[solo ? solo.board : 'tumbledash'];
     const box = $('tdBoard'), list = $('tdBoardList');
     box.hidden = !rows; if (!rows) return;
     list.innerHTML = '';
@@ -602,7 +661,7 @@
       }
       list.appendChild(li);
     });
-  });
+  }
 
   // ---------- Input ----------
   // Keys: WASD / arrows to run, Space to jump. Touch: drag on the screen to run, JUMP button on the right.
@@ -659,9 +718,26 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     buildWorld(); return true;
   }
+  // Honeycomb uses this same screen with its own title, words, best score and leaderboard.
+  const SOLO = {
+    honeycomb: { mode: 'honey', title: 'Honeycomb', play: 'Play!', again: 'Play again', board: 'honeycomb',
+      hint: '🐝 Five floors of honey hexagons! Each tile drops away a moment after someone steps on it. Keep moving, and don’t fall into the honey at the bottom. Last one standing wins!' },
+  };
+  let solo = null;
+  const TEXTS = { title: $('tdMenu').querySelector('h1').textContent, hint: $('tdMenu').querySelector('.hint').innerHTML, play: $('tdPlay').textContent, again: $('tdAgain').textContent };
+  function saveBest() { if (solo) try { localStorage.setItem(solo.board + '.best', JSON.stringify(best)); } catch {} else store.set('best', best); }
+  function useVariant(key) {
+    solo = SOLO[key] || null;
+    $('tdMenu').querySelector('h1').textContent = solo ? solo.title : TEXTS.title;
+    if (solo) $('tdMenu').querySelector('.hint').textContent = solo.hint; else $('tdMenu').querySelector('.hint').innerHTML = TEXTS.hint;
+    $('tdPlay').textContent = solo ? solo.play : TEXTS.play; $('tdAgain').textContent = solo ? solo.again : TEXTS.again;
+    root.setAttribute('aria-label', solo ? solo.title : 'Tumble Dash');
+    if (solo) { try { best = Number(JSON.parse(localStorage.getItem(solo.board + '.best'))) || 0; } catch { best = 0; } } else best = store.get('best', 0);
+  }
+  window.Honeycomb = { open: () => window.TumbleDash.open('honeycomb'), close: () => window.TumbleDash.close() };
   window.TumbleDash = {
-    open() {
-      root.hidden = false; active = true;
+    open(variant) {
+      root.hidden = false; active = true; useVariant(variant);
       if (!setup()) { $('tdNote').textContent = 'This game needs 3D graphics, which this browser has turned off.'; return; }
       resize(); toMenu(); last = performance.now(); requestAnimationFrame(loop);
     },

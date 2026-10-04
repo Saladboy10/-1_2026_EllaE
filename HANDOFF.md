@@ -27,6 +27,7 @@ between accounts, so this page is the summary of what was built and how to carry
   runners. A wheel picks one of four games (`MODES` in the file): Obstacle Race, Block Dash, Tile Fall and Spin Zone.
   Each mode has `build`, `tick`, `hit`, `bot` and `camera`; add a new one there to put it on the wheel. Its own leaderboard.
 - **Skin Shop**: the avatar maker (`#custom` in `games/rail-rush.js`, shown with Dodge and Weave's 3D view) opens from the lobby with `Lobby.shop()` / `RailRush.openShop()`, first thing on every visit and from the lobby's Skin Shop button. Dodge and Weave no longer has its own shop button. All games share one coin bank (`railrush.bank`), shown in the lobby.
+- **Honeycomb**: its own lobby game, built on the Tumble Dash engine (`MODES.honey`, `window.Honeycomb`): five floors of honey hexagons that drop when stepped on. Its own leaderboard (`honeycomb`).
 - **Win celebration (`celebrate.js`)**: `Celebrate.win()` shows a giant rainbow "YOU WON!" with confetti; the games call it when you win.
 - **Shared storage (`leaderboard.js`)**: leaderboards, secret codes limited to a number of players, and skin requests.
 - **Secrets**: secret codes and the secret "unlock everything" runner name are stored scrambled (`codeHash`)
@@ -52,6 +53,8 @@ Open a Claude Code session on the web with this repository and branch, then ask 
       { "path": "glowsquares/{self}", "write": "interact" },
       { "path": "tumbledash", "read": "view", "write": "owner" },
       { "path": "tumbledash/{self}", "write": "interact" },
+      { "path": "honeycomb", "read": "view", "write": "owner" },
+      { "path": "honeycomb/{self}", "write": "interact" },
       { "path": "claims", "read": "view", "write": "owner" },
       { "path": "claims/{self}", "write": "interact" },
       { "path": "codelocks", "read": "interact", "write": "interact" },
@@ -63,7 +66,7 @@ Open a Claude Code session on the web with this repository and branch, then ask 
 }
 ```
 
-   and the supporting files `assets/rail-rush.jpg`, `assets/web-swing.jpg`, `assets/star-catcher.jpg`, `assets/glow-squares.jpg` and `assets/tumble-dash.jpg`, published at those same paths.
+   and the supporting files `assets/rail-rush.jpg`, `assets/web-swing.jpg`, `assets/star-catcher.jpg`, `assets/glow-squares.jpg`, `assets/tumble-dash.jpg` and `assets/honeycomb.jpg`, published at those same paths.
 
 3. Share it from the artifact's Share menu. On a school (organization) account, choosing
    "Anyone in your organization" as **Contributor** lets every classmate save scores, use codes and send requests.

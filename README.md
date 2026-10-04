@@ -85,3 +85,8 @@ Stumble Guys-style party games against 11 computer runners. Each time you play, 
 
 In the survival games, last to the end wins (100 points + 5 for each player knocked out). Coins go into the Dodge and Weave bank.
 **Move:** WASD or the arrow keys, Space to jump. Touch: drag on the screen to run, tap the JUMP button. Its own leaderboard.
+
+## Honeycomb
+Like Honey Drop in Stumble Guys: five floors of honey hexagon tiles over a pool of honey, with bees buzzing round. Each tile
+flashes and drops a moment after someone steps on it. Fall into the honey and you're out; last one standing wins.
+It runs on the Tumble Dash engine (`MODES.honey` in `games/tumble-dash.js`, opened as `window.Honeycomb`) and has its own leaderboard.

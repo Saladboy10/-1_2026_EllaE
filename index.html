@@ -471,6 +471,21 @@
           </div>
         </div>
       </article>
+      <article class="card">
+        <img src="assets/honeycomb.jpg" alt="Runners on floors of honey hexagon tiles with bees flying around">
+        <div class="card-body">
+          <h3>Honeycomb</h3>
+          <p>Five floors of honey hexagons that drop away after you step on them! Don’t fall in the honey. Last one standing wins.</p>
+          <div class="meta">
+            <span class="pill">Survival</span>
+            <span class="pill best" id="best-honeycomb" hidden></span>
+          </div>
+          <div class="actions">
+            <button class="play" type="button" data-game="honeycomb">Play</button>
+            <button class="board-btn" type="button" data-board="honeycomb">Leaderboard</button>
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 
@@ -513,6 +528,11 @@
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
   </div>
+  <div class="leaders" id="top-honeycomb" data-board="honeycomb" data-title="Honeycomb" data-unit="">
+    <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
+    <ol class="top"></ol>
+    <p class="leaders-note">Loading scores…</p>
+  </div>
 </main>
 </section>
 
@@ -527,12 +547,12 @@
 <script>
 // Lobby: shows the game cards and hands control to a game when Play is pressed.
 (() => {
-  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher, glowsquares: () => window.GlowSquares, tumbledash: () => window.TumbleDash };
+  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher, glowsquares: () => window.GlowSquares, tumbledash: () => window.TumbleDash, honeycomb: () => window.Honeycomb };
   const lobby = document.getElementById('lobby');
   const readBest = key => { try { return Number(JSON.parse(localStorage.getItem(key))) || 0; } catch { return 0; } };
 
   function refresh() {
-    for (const [id, unit] of [['railrush', ''], ['webswing', ''], ['starcatcher', ''], ['glowsquares', ''], ['tumbledash', '']]) {
+    for (const [id, unit] of [['railrush', ''], ['webswing', ''], ['starcatcher', ''], ['glowsquares', ''], ['tumbledash', ''], ['honeycomb', '']]) {
       const best = readBest(id + '.best'), pill = document.getElementById('best-' + id);
       pill.hidden = !best; pill.textContent = 'Best ' + best + unit;
     }
