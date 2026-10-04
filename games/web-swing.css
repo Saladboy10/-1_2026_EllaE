@@ -15,3 +15,7 @@
   font-family: var(--display); font-size: 1rem; line-height: 1.1; color: var(--paper); background: #e8333a;
   border: 4px solid var(--ink); box-shadow: 0 5px 0 var(--ink); }
 #swWeb:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink); }
+/* A soft dark edge round the screen, like a movie camera. */
+#webswing::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(20,10,30,.45) 100%); }
+#swHud, #swPad, #webswing .panel { z-index: 1; }
