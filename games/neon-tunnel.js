@@ -1,4 +1,4 @@
-// Neon Tunnel: fly down a glowing eight-sided tunnel in the dark, like Tunnel Rush. Walls with gaps
+// Twist (files and storage say "neon tunnel"): fly down a glowing eight-sided tunnel in the dark, like Tunnel Rush. Walls with gaps
 // rush at you; spin the tunnel left and right so your glowing ball (at the bottom of the screen)
 // goes through a gap. It speeds up the longer you last, some walls spin, and the colors change.
 // Loaded by index.html after rail-rush.js; coins go into the Dodge and Weave bank.

@@ -1,11 +1,11 @@
-/* Neon Tunnel styles. Loaded by index.html after rail-rush.css (it reuses that file's panels and buttons). */
+/* Twist (Neon Tunnel) styles. Loaded by index.html after rail-rush.css (it reuses that file's panels and buttons). */
 #neontunnel { position: fixed; inset: 0; z-index: 15; background: #000; overflow: hidden; touch-action: none; }
 #ntCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 #neontunnel .nt-panel { bottom: 24px; text-align: center; background: rgba(8, 20, 28, .92); color: #e8fbff; border-color: #4ff0ff;
   box-shadow: 0 0 30px rgba(79, 240, 255, .45), 0 6px 0 #0a3a44; }
 #neontunnel .nt-panel .hint, #neontunnel .nt-panel .stat span { color: #a9dfe8; }
 #neontunnel .nt-panel .stat b, #neontunnel .nt-panel h2 { color: #fff; }
-.nt-logo { margin: 0; font-family: var(--display); font-size: 2.6rem; line-height: .95; letter-spacing: .04em; color: #cfe9f3;
+.nt-logo { margin: 0; font-family: var(--display); font-size: 3.4rem; line-height: .95; letter-spacing: .04em; color: #cfe9f3;
   -webkit-text-stroke: 1px #2a6d8a; text-shadow: 0 0 18px rgba(79, 240, 255, .8); }
 .nt-logo span { font-style: italic; color: #6fa8dc; }
 .nt-diff { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 86px; border-radius: 50%; aspect-ratio: 1;

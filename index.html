@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="games/tumble-dash.css">
 <link rel="stylesheet" href="games/monster-drive.css">
 <link rel="stylesheet" href="games/neon-tunnel.css">
+<link rel="stylesheet" href="games/turbo-track.css">
 <style>
   /* Lobby: a full-screen layer over the games. One centered column; game cards in a
      wrapping grid, upcoming games as dashed empty slots. */
@@ -391,11 +392,11 @@
   </section>
 </section>
 
-<section id="neontunnel" aria-label="Neon Tunnel" hidden>
+<section id="neontunnel" aria-label="Twist" hidden>
   <canvas id="ntCanvas"></canvas>
   <div id="ntHud" hidden><span id="ntScore">0</span></div>
   <section id="ntMenu" class="panel center nt-panel">
-    <h1 class="nt-logo">NEON<br><span>TUNNEL</span></h1>
+    <h1 class="nt-logo"><span>TWIST</span></h1>
     <div class="stats">
       <div class="stat"><b id="ntBest">0</b><span>Best</span></div>
       <div class="stat"><b id="ntBank">0</b><span>Coins</span></div>
@@ -424,6 +425,46 @@
     <div class="row">
       <button class="btn" id="ntMenuBtn" type="button">Menu</button>
       <button class="btn" id="ntOverLobby" type="button">Lobby</button>
+    </div>
+  </section>
+</section>
+
+<section id="turbotrack" aria-label="Turbo Track" hidden>
+  <canvas id="ttCanvas"></canvas>
+  <div id="ttHud" hidden>
+    <div class="tt-left"><span class="tt-tag">POS</span> <b id="ttPos">10/10</b><br><span id="ttTime">00:00:000</span></div>
+    <div class="tt-mid" id="ttPlace">10th</div>
+    <div class="tt-right"><span class="tt-tag">LAP</span> <b id="ttLap">1/2</b><br><span id="ttMph">0 MPH</span></div>
+  </div>
+  <div id="ttBig" hidden>3</div>
+  <div id="ttToast" hidden></div>
+  <section id="ttMenu" class="panel center tt-panel">
+    <h1 class="logo">Turbo Track</h1>
+    <div class="stats">
+      <div class="stat"><b id="ttBest">0</b><span>Best</span></div>
+      <div class="stat"><b id="ttBank">0</b><span>Coins</span></div>
+    </div>
+    <p class="hint">Race 9 cars for 2 laps! Your car speeds up by itself. Steer with ← → (or hold the left or right side of the screen), drive over the green arrows for a speed boost and dodge the hexagon barriers.</p>
+    <button class="btn primary" id="ttPlay" type="button">Race!</button>
+    <button class="btn" id="ttLobby" type="button">Back to lobby</button>
+  </section>
+  <section id="ttOver" class="panel center tt-panel" hidden>
+    <h2 id="ttOverTitle">You came 1st</h2>
+    <div class="stats">
+      <div class="stat"><b id="ttOverScore">0</b><span>Time</span></div>
+      <div class="stat"><b id="ttOverCoins">0</b><span>Coins</span></div>
+      <div class="stat"><b id="ttOverBest">0</b><span>Best</span></div>
+    </div>
+    <p class="hint" id="ttNote"></p>
+    <div class="board" id="ttBoard" hidden>
+      <h3>Leaderboard</h3>
+      <ol id="ttBoardList"></ol>
+      <p class="hint" id="ttBoardStatus"></p>
+    </div>
+    <button class="btn primary" id="ttAgain" type="button">Race again</button>
+    <div class="row">
+      <button class="btn" id="ttMenuBtn" type="button">Menu</button>
+      <button class="btn" id="ttOverLobby" type="button">Lobby</button>
     </div>
   </section>
 </section>
@@ -578,7 +619,7 @@
       <article class="card">
         <img src="assets/neon-tunnel.jpg" alt="A glowing neon tunnel with colorful walls rushing toward you">
         <div class="card-body">
-          <h3>Neon Tunnel</h3>
+          <h3>Twist</h3>
           <p>Zoom through a glowing tunnel and spin it to fly through the gaps in the walls. It keeps getting faster!</p>
           <div class="meta">
             <span class="pill">Reflexes</span>
@@ -587,6 +628,21 @@
           <div class="actions">
             <button class="play" type="button" data-game="neontunnel">Play</button>
             <button class="board-btn" type="button" data-board="neontunnel">Leaderboard</button>
+          </div>
+        </div>
+      </article>
+      <article class="card">
+        <img src="assets/turbo-track.jpg" alt="A blue muscle car racing on a hilly track with green walls">
+        <div class="card-body">
+          <h3>Turbo Track</h3>
+          <p>Race 9 cars on a twisty, hilly track! Hit the green arrows for speed boosts and dodge the barriers.</p>
+          <div class="meta">
+            <span class="pill">Racing</span>
+            <span class="pill best" id="best-turbotrack" hidden></span>
+          </div>
+          <div class="actions">
+            <button class="play" type="button" data-game="turbotrack">Play</button>
+            <button class="board-btn" type="button" data-board="turbotrack">Leaderboard</button>
           </div>
         </div>
       </article>
@@ -642,7 +698,12 @@
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
   </div>
-  <div class="leaders" id="top-neontunnel" data-board="neontunnel" data-title="Neon Tunnel" data-unit="">
+  <div class="leaders" id="top-neontunnel" data-board="neontunnel" data-title="Twist" data-unit="">
+    <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
+    <ol class="top"></ol>
+    <p class="leaders-note">Loading scores…</p>
+  </div>
+  <div class="leaders" id="top-turbotrack" data-board="turbotrack" data-title="Turbo Track" data-unit="">
     <div class="leaders-head" aria-hidden="true"><span>Place</span><span>Name</span><span>Score</span></div>
     <ol class="top"></ol>
     <p class="leaders-note">Loading scores…</p>
@@ -660,15 +721,16 @@
 <script src="games/tumble-dash.js"></script>
 <script src="games/monster-drive.js"></script>
 <script src="games/neon-tunnel.js"></script>
+<script src="games/turbo-track.js"></script>
 <script>
 // Lobby: shows the game cards and hands control to a game when Play is pressed.
 (() => {
-  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher, glowsquares: () => window.GlowSquares, tumbledash: () => window.TumbleDash, honeycomb: () => window.Honeycomb, monsterdrive: () => window.MonsterDrive, neontunnel: () => window.NeonTunnel };
+  const GAMES = { railrush: () => window.RailRush, webswing: () => window.WebSwing, starcatcher: () => window.StarCatcher, glowsquares: () => window.GlowSquares, tumbledash: () => window.TumbleDash, honeycomb: () => window.Honeycomb, monsterdrive: () => window.MonsterDrive, neontunnel: () => window.NeonTunnel, turbotrack: () => window.TurboTrack };
   const lobby = document.getElementById('lobby');
   const readBest = key => { try { return Number(JSON.parse(localStorage.getItem(key))) || 0; } catch { return 0; } };
 
   function refresh() {
-    for (const [id, unit] of [['railrush', ''], ['webswing', ''], ['starcatcher', ''], ['glowsquares', ''], ['tumbledash', ''], ['honeycomb', ''], ['neontunnel', '']]) {
+    for (const [id, unit] of [['railrush', ''], ['webswing', ''], ['starcatcher', ''], ['glowsquares', ''], ['tumbledash', ''], ['honeycomb', ''], ['neontunnel', ''], ['turbotrack', '']]) {
       const best = readBest(id + '.best'), pill = document.getElementById('best-' + id);
       pill.hidden = !best; pill.textContent = 'Best ' + best + unit;
     }

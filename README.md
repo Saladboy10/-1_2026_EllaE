@@ -20,7 +20,7 @@ skin requests don't work (they need the Claude version's shared storage); codes 
 ## How it's organized
 - **Skin Shop:** every time Level Up opens, the Skin Shop comes up first so you pick your skin; the 👕 Skin Shop button in the lobby opens it any time. Your skin is used in every game. Coins from all the games add up in one bank, shown in the lobby next to the button.
 - `index.html` is the lobby. Every game lives inside this one page; the lobby covers the screen until you press Play.
-- `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `web-swing.js`/`web-swing.css` for Web Swing, `star-catcher.js`/`star-catcher.css` for Jimmy Yum-Yum, `glow-squares.js`/`glow-squares.css` for Glow Squares, `tumble-dash.js`/`tumble-dash.css` for Tumble Dash (and Honeycomb), `monster-drive.js`/`monster-drive.css` for Monster Drive, `neon-tunnel.js`/`neon-tunnel.css` for Neon Tunnel).
+- `games/` holds each game's own code (`rail-rush.js`/`rail-rush.css` for Dodge and Weave, `web-swing.js`/`web-swing.css` for Web Swing, `star-catcher.js`/`star-catcher.css` for Jimmy Yum-Yum, `glow-squares.js`/`glow-squares.css` for Glow Squares, `tumble-dash.js`/`tumble-dash.css` for Tumble Dash (and Honeycomb), `monster-drive.js`/`monster-drive.css` for Monster Drive, `neon-tunnel.js`/`neon-tunnel.css` for Twist, `turbo-track.js`/`turbo-track.css` for Turbo Track).
 - `celebrate.js` is the win party every game shares: a giant bouncing rainbow "YOU WON!" and confetti (Jimmy Yum-Yum after Level 3, Glow Squares, and Tumble Dash when you're 1st or survive).
 - `leaderboard.js` runs the shared storage: leaderboards, limited secret codes and skin requests. Each game has its own board with every player's best score.
   Boards work in the published game; opened as a plain file, the games still play but the board stays hidden.
@@ -99,7 +99,13 @@ Flip onto your roof or fall in the water and the level starts again.
 - **Drive:** → or D (in the air it tips the truck back). **Reverse:** ← or A (tips it forward). **R** tries again. On a tablet, hold the big ▶ and ◀ buttons.
 - Each new level beaten gives 20 coins (5 for replays). The leaderboard counts how many levels you've beaten.
 
-## Neon Tunnel
+## Twist (`neon-tunnel.js`)
 Like Tunnel Rush: fly down a glowing eight-sided tunnel in the dark while walls with gaps rush at you. Spin the tunnel
 (← → or A D, or hold the left/right side of the screen) so your glowing ball goes through a gap. It speeds up, some walls
 spin, and the colors change every 20 seconds. The star button picks Easy, Med or Hard. Score is time survived; coins = score ÷ 40.
+
+## Turbo Track
+Like Super Tunnel Rush: a 3D race against 9 computer cars over 2 laps of a twisty, hilly track with glowing green walls.
+Your car speeds up by itself; steer with ← → (or hold the left/right side of the screen). Drive over the green arrows
+for a speed boost; hitting a hexagon barrier slows you right down. The screen shows your position, lap, MPH and time.
+Better places give more points and coins; winning brings the rainbow party. Its own leaderboard.

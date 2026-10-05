@@ -1,0 +1,14 @@
+/* Turbo Track styles. Loaded by index.html after rail-rush.css (it reuses that file's panels and buttons). */
+#turbotrack { position: fixed; inset: 0; z-index: 15; background: #8a93b8; overflow: hidden; touch-action: none; }
+#ttCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#turbotrack .tt-panel { bottom: 24px; text-align: center; }
+#ttHud { position: absolute; left: 0; right: 0; top: 0; padding: calc(10px + env(safe-area-inset-top, 0px)) 18px; display: flex; justify-content: space-between;
+  align-items: flex-start; pointer-events: none; font-family: var(--display); color: #fff; text-shadow: 0 3px 0 rgba(0,0,0,.45); font-size: 1.3rem; line-height: 1.2; }
+#ttHud b { font-size: 2.2rem; }
+.tt-right { text-align: right; }
+.tt-tag { font-size: .8rem; background: #fff; color: #111; padding: 1px 5px; text-shadow: none; vertical-align: middle; }
+.tt-mid { font-size: 3.4rem; margin-top: 24px; }
+#ttBig { position: absolute; left: 50%; top: 30%; transform: translateX(-50%); pointer-events: none; font-family: var(--display); font-size: 6rem;
+  color: #ffd23f; -webkit-text-stroke: 3px var(--ink); text-shadow: 0 6px 0 var(--ink); }
+#ttToast { position: absolute; left: 0; right: 0; bottom: 18%; text-align: center; pointer-events: none; font-family: var(--display); font-size: 2rem;
+  color: #fff; background: rgba(0,0,0,.35); padding: 8px 0; }
